@@ -54,8 +54,11 @@
     </select>
 
     <label>📱 Device ID Pengguna <span style="color:#ef4444;">*</span></label>
-    <input type="text" id="deviceId" placeholder="Contoh: A3F7-K9X2" style="text-transform:uppercase;letter-spacing:2px;">
-    <div style="font-size:12px;color:#888;margin-top:-10px;margin-bottom:14px;">Device ID dikirim user saat minta upgrade via WhatsApp</div>
+    <input type="text" id="deviceId" placeholder="Contoh: A3F7-K9X2" style="text-transform:uppercase;letter-spacing:2px;" oninput="previewKodeUnik()">
+    <div id="kodeUnikPreview" style="font-size:12px;background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:8px 12px;margin-top:-10px;margin-bottom:14px;display:none;">
+        🔢 Kode unik user ini: <strong id="kodeUnikValue">-</strong> &nbsp;|&nbsp;
+        Nominal 1 Bulan: <strong id="nominalPreview">-</strong>
+    </div>
 
     <label>👤 Nama Pengguna (opsional)</label>
     <input type="text" id="namaPengguna" placeholder="Contoh: Pak Ahmad - KBIH Al-Barokah">
@@ -121,6 +124,18 @@ function clearAllHistory() {
     if(!confirm('Hapus SEMUA riwayat kode?\nTindakan ini tidak bisa dibatalkan!')) return;
     localStorage.removeItem('safara_keygen_history');
     renderHistory();
+}
+
+function previewKodeUnik() {
+    const deviceRaw = document.getElementById('deviceId').value.trim().toUpperCase();
+    const preview = document.getElementById('kodeUnikPreview');
+    if(!deviceRaw || deviceRaw.length < 4) { preview.style.display = 'none'; return; }
+    const deviceId = deviceRaw.replace('-', '');
+    const num = (parseInt(_sh(deviceId + 'PAY'), 36) % 999) + 1;
+    const kode = num.toString().padStart(3, '0');
+    document.getElementById('kodeUnikValue').textContent = kode;
+    document.getElementById('nominalPreview').textContent = `Rp ${(50000 + parseInt(kode)).toLocaleString('id-ID')}`;
+    preview.style.display = 'block';
 }
 
 function generateKode() {
