@@ -73,7 +73,12 @@
     </div>
 
     <div class="history" id="historySection" style="display:none;">
-        <h3>📋 Riwayat Kode (sesi ini)</h3>
+        <div style="display:flex;align-items:center;justify-content:space-between;border-top:1px solid #eee;padding-top:14px;margin-top:20px;margin-bottom:10px;">
+            <h3 style="margin:0;font-size:14px;color:#555;">📋 Riwayat Kode (<span id="historyCount">0</span>)</h3>
+            <button onclick="clearAllHistory()" style="padding:4px 10px;background:#ef4444;color:white;border:none;border-radius:6px;font-size:12px;cursor:pointer;">Hapus Semua</button>
+        </div>
+        <input type="text" id="searchHistory" placeholder="🔍 Cari nama / device / kode..." oninput="renderHistory()"
+            style="width:100%;padding:10px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;margin-bottom:10px;">
         <div id="historyList"></div>
     </div>
 </div>
@@ -81,12 +86,41 @@
 <script>
 const _SK = "SAFR2026XK";
 const WA_ADMIN = "6281391485440";
-const history_codes = [];
 
 function _sh(str) {
     let h = 5381;
     for(let i = 0; i < str.length; i++) h = ((h << 5) + h) + str.charCodeAt(i);
     return (Math.abs(h) % 1679616).toString(36).toUpperCase().padStart(4,'0').substring(0,4);
+}
+
+// ===== HISTORI PERMANEN =====
+function loadHistory() {
+    try { return JSON.parse(localStorage.getItem('safara_keygen_history') || '[]'); }
+    catch(e) { return []; }
+}
+
+function saveHistory(list) {
+    localStorage.setItem('safara_keygen_history', JSON.stringify(list));
+}
+
+function addToHistory(item) {
+    const list = loadHistory();
+    list.unshift(item);
+    saveHistory(list);
+}
+
+function deleteHistory(index) {
+    if(!confirm('Hapus riwayat ini?')) return;
+    const list = loadHistory();
+    list.splice(index, 1);
+    saveHistory(list);
+    renderHistory();
+}
+
+function clearAllHistory() {
+    if(!confirm('Hapus SEMUA riwayat kode?\nTindakan ini tidak bisa dibatalkan!')) return;
+    localStorage.removeItem('safara_keygen_history');
+    renderHistory();
 }
 
 function generateKode() {
@@ -101,7 +135,6 @@ function generateKode() {
 
     const deviceId = deviceRaw.replace('-','');
     const devEnc = _sh(deviceId).substring(0,4);
-
     const expiryDays = Math.floor(Date.now() / 86400000) + days;
     const expiryEnc = expiryDays.toString(36).toUpperCase().padStart(4,'0');
     const typeEnc = days.toString(36).toUpperCase().padStart(4,'0');
@@ -111,14 +144,20 @@ function generateKode() {
     const expiryDate = new Date(expiryDays * 86400000);
     const paketLabel = days === 1 ? '1 Hari (Rp 10.000)' : days === 7 ? '7 Hari (Rp 25.000)' : days === 30 ? '1 Bulan (Rp 50.000)' : days === 90 ? '3 Bulan (Rp 120.000)' : '1 Tahun (Rp 400.000)';
     const expStr = expiryDate.toLocaleDateString('id-ID');
+    const tanggalGenerate = new Date().toLocaleDateString('id-ID') + ' ' + new Date().toLocaleTimeString('id-ID');
 
     document.getElementById('resultCode').textContent = code;
     document.getElementById('resultInfo').textContent = `Paket ${paketLabel} · s/d ${expStr}`;
     document.getElementById('resultDevice').textContent = `Device: ${deviceRaw}${nama ? ' · ' + nama : ''}`;
     document.getElementById('resultCard').style.display = 'block';
 
-    history_codes.unshift({ code, paket: paketLabel, expiry: expStr, device: deviceRaw, nama, waktu: new Date().toLocaleTimeString('id-ID') });
+    // Simpan ke histori permanen
+    addToHistory({ code, paket: paketLabel, expiry: expStr, device: deviceRaw, nama, tanggal: tanggalGenerate });
     renderHistory();
+
+    // Reset form
+    document.getElementById('deviceId').value = '';
+    document.getElementById('namaPengguna').value = '';
 }
 
 function copyCode() {
@@ -139,14 +178,56 @@ function shareWA() {
 }
 
 function renderHistory() {
-    if(history_codes.length === 0) return;
-    document.getElementById('historySection').style.display = 'block';
-    document.getElementById('historyList').innerHTML = history_codes.map(h => `
+    const list = loadHistory();
+    const keyword = document.getElementById('searchHistory')?.value.toLowerCase() || '';
+    const filtered = keyword ? list.filter(h =>
+        h.nama?.toLowerCase().includes(keyword) ||
+        h.device?.toLowerCase().includes(keyword) ||
+        h.code?.toLowerCase().includes(keyword)
+    ) : list;
+
+    const section = document.getElementById('historySection');
+    const countEl = document.getElementById('historyCount');
+    if(countEl) countEl.textContent = `${list.length} kode`;
+    section.style.display = list.length > 0 ? 'block' : 'none';
+
+    document.getElementById('historyList').innerHTML = filtered.length === 0
+        ? '<p style="color:#999;font-size:13px;text-align:center;padding:10px;">Tidak ditemukan</p>'
+        : filtered.map((h, i) => `
         <div class="history-item">
-            <div class="history-code" onclick="navigator.clipboard.writeText('${h.code}')">${h.code}</div>
-            <div class="history-meta">${h.paket} · s/d ${h.expiry} · Device: ${h.device}${h.nama ? ' · ' + h.nama : ''} · ${h.waktu}</div>
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+                <div style="flex:1;min-width:0;">
+                    <div class="history-code" onclick="navigator.clipboard.writeText('${h.code}').then(()=>showCopied(this))" title="Ketuk untuk salin">${h.code}</div>
+                    <div class="history-meta">
+                        📦 ${h.paket} · 📅 s/d ${h.expiry}<br>
+                        📱 ${h.device}${h.nama ? ' · 👤 ' + h.nama : ''}<br>
+                        🕐 ${h.tanggal}
+                    </div>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0;">
+                    <button onclick="shareHistoryWA(${i})" style="padding:4px 8px;background:#25d366;color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer;">WA</button>
+                    <button onclick="deleteHistory(${i})" style="padding:4px 8px;background:#ef4444;color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer;">Hapus</button>
+                </div>
+            </div>
         </div>`).join('');
 }
+
+function showCopied(el) {
+    const orig = el.textContent;
+    el.textContent = '✅ Tersalin!';
+    setTimeout(() => el.textContent = orig, 1500);
+}
+
+function shareHistoryWA(index) {
+    const list = loadHistory();
+    const h = list[index];
+    if(!h) return;
+    const msg = `🔑 *Kode Aktivasi Safara*\n\nPaket ${h.paket} · s/d ${h.expiry}\n\nKode Aktivasi Anda:\n*${h.code}*\n\n📲 Cara aktivasi:\n1. Buka aplikasi Safara\n2. Setting → Lisensi\n3. Masukkan kode di atas\n4. Klik *Aktifkan Sekarang*\n\nTerima kasih sudah berlangganan! 🙏`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`);
+}
+
+// Init saat halaman dibuka
+window.onload = () => renderHistory();
 </script>
 </body>
 </html>
