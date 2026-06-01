@@ -46,6 +46,8 @@
 
     <label>📦 Pilih Paket</label>
     <select id="paket">
+        <option value="1">1 Hari — Rp 10.000</option>
+        <option value="7">7 Hari — Rp 25.000</option>
         <option value="30">1 Bulan — Rp 50.000</option>
         <option value="90">3 Bulan — Rp 120.000</option>
         <option value="365">1 Tahun — Rp 400.000</option>
@@ -107,7 +109,7 @@ function generateKode() {
     const code = `SAFARA-${typeEnc}-${expiryEnc}-${devEnc}-${checksum}`;
 
     const expiryDate = new Date(expiryDays * 86400000);
-    const paketLabel = days === 30 ? '1 Bulan (Rp 50.000)' : days === 90 ? '3 Bulan (Rp 120.000)' : '1 Tahun (Rp 400.000)';
+    const paketLabel = days === 1 ? '1 Hari (Rp 10.000)' : days === 7 ? '7 Hari (Rp 25.000)' : days === 30 ? '1 Bulan (Rp 50.000)' : days === 90 ? '3 Bulan (Rp 120.000)' : '1 Tahun (Rp 400.000)';
     const expStr = expiryDate.toLocaleDateString('id-ID');
 
     document.getElementById('resultCode').textContent = code;
