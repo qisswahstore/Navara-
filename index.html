@@ -5066,11 +5066,8 @@ function getWatermarkStyle() {
 function injectWatermarkToPrintWin(win) {
     if(!win) return;
     try {
-        // Cek apakah template sudah punya watermark dari buildPrintWatermark
-        const hasWatermark = win.document.head?.innerHTML?.includes('body::after') ||
-                             win.document.body?.innerHTML?.includes('body::after') ||
-                             win.document.body?.innerHTML?.includes('wmTileWrap');
-        if(hasWatermark) return; // Sudah ada, skip
+        // Cek apakah template sudah punya watermark dari buildPrintWatermark (id="wmMark")
+        if(win.document.getElementById && win.document.getElementById('wmMark')) return;
 
         const cfg = getKonfigurasiProData();
         if(!cfg.watermark?.enabled) return;
@@ -5086,24 +5083,11 @@ function injectWatermarkToPrintWin(win) {
             ? 'translate(-50%, -50%)'
             : 'translate(-50%, -50%) rotate(-40deg)';
 
-        const style = win.document.createElement('style');
-        style.textContent = `
-            @media print {
-                body::after {
-                    content: "${text}";
-                    position: fixed;
-                    top: 50%;
-                    left: 50%;
-                    transform: ${transform};
-                    font-size: ${fontSize}pt;
-                    font-weight: bold;
-                    color: rgba(13,92,74,${opacity});
-                    pointer-events: none;
-                    z-index: 9999;
-                    white-space: nowrap;
-                }
-            }`;
-        if(win.document.head) win.document.head.appendChild(style);
+        const div = win.document.createElement('div');
+        div.id = 'wmMark';
+        div.style.cssText = `position:fixed;top:50%;left:50%;transform:${transform};font-size:${fontSize}pt;font-weight:bold;color:rgba(13,92,74,${opacity});pointer-events:none;z-index:9999;white-space:nowrap;`;
+        div.textContent = text;
+        if(win.document.body) win.document.body.appendChild(div);
     } catch(e) {}
 }
 
@@ -10616,9 +10600,9 @@ function buildPrintHeader(cfg, tanggal) {
     if(showIzin && i2.izin)             infoHtml += `<div style="font-size:11px;opacity:0.8;">No. Izin: ${i2.izin}</div>`;
 
     return `
-    <div style="background:#0D5C4A;color:white;padding:18px 22px;display:flex;align-items:center;gap:18px;margin-bottom:24px;border-radius:12px;-webkit-print-color-adjust:exact;print-color-adjust:exact;">
+    <div style="background:#0D5C4A;color:white;padding:18px 22px;display:flex;align-items:center;gap:18px;margin-bottom:24px;border-radius:12px;text-align:left;-webkit-print-color-adjust:exact;print-color-adjust:exact;">
         ${logoHtml}
-        <div style="flex:1;">${infoHtml}</div>
+        <div style="flex:1;text-align:left;">${infoHtml}</div>
     </div>`;
 }
 
@@ -10636,33 +10620,15 @@ function buildPrintWatermark(cfg) {
                 tiles += `<div style="position:absolute;top:${r*15}%;left:${c*28}%;font-size:${Math.round(fontSize*0.4)}px;font-weight:bold;color:rgba(13,92,74,${opacity});transform:rotate(-30deg);white-space:nowrap;pointer-events:none;">${text}</div>`;
             }
         }
-        return `<style>@media print{
-            #wmFixed{display:block!important;}
-        }</style>
-        <div id="wmFixed" style="position:fixed;top:0;left:0;width:100%;height:100%;overflow:hidden;pointer-events:none;z-index:9999;display:none;">${tiles}</div>`;
+        return `<div id="wmMark" style="position:fixed;top:0;left:0;width:100%;height:100%;overflow:hidden;pointer-events:none;z-index:9999;">${tiles}</div>`;
     }
 
     const transform = posisi === 'center'
         ? 'translate(-50%, -50%)'
         : 'translate(-50%, -50%) rotate(-40deg)';
 
-    return `<style>
-        @media print {
-            body::after {
-                content: "${text}";
-                position: fixed;
-                top: 50%;
-                left: 50%;
-                transform: ${transform};
-                font-size: ${fontSize}pt;
-                font-weight: bold;
-                color: rgba(13,92,74,${opacity});
-                pointer-events: none;
-                z-index: 9999;
-                white-space: nowrap;
-            }
-        }
-    </style>`;
+    // Tampil di layar (preview) DAN saat print - konsisten
+    return `<div id="wmMark" style="position:fixed;top:50%;left:50%;transform:${transform};font-size:${fontSize}pt;font-weight:bold;color:rgba(13,92,74,${opacity});pointer-events:none;z-index:9999;white-space:nowrap;">${text}</div>`;
 }
 
 function buildPrintTandaTangan(cfg, tglCetak) {
