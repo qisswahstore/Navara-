@@ -1998,10 +1998,6 @@
         <div class="summary-real" id="summaryKas">Saldo Akhir: Rp 0</div>
         <div class="table-container"><table id="kasTable"><thead><tr><th>Tgl</th><th>Kegiatan</th><th>Keterangan</th><th>Nominal</th><th>Aksi</th></tr></thead><tbody id="bodyKas"></tbody></table></div>
         <div id="hasilWA" class="res-card" style="display:none;"></div>
-        <div class="section-title"><span>Backup & Restore Data Kas</span></div>
-        <div class="backup-info"><i class="fas fa-info-circle"></i> Backup & Restore data transaksi kas</div>
-        <div class="row"><button class="btn btn-blue btn-small" onclick="backupKasData()" style="flex:1"><i class="fas fa-download"></i> BACKUP KAS</button><button class="btn btn-orange btn-small" onclick="document.getElementById('restoreKasFile').click()" style="flex:1"><i class="fas fa-upload"></i> RESTORE KAS</button></div>
-        <input type="file" id="restoreKasFile" accept=".json" style="display:none" onchange="restoreKasData(this)">
         <div class="export-dropdown-wrapper" style="margin-top:12px;">
             <button class="btn-export" onclick="toggleExportDropdown('exportMenuKas')">
                 <i class="fas fa-download"></i> Export <i class="fas fa-chevron-up" style="font-size:11px;"></i>
@@ -2039,11 +2035,8 @@
         <div class="sort-buttons"><span style="font-size:12px; color:var(--gray);">Jumlah per halaman:</span><select id="perPageJamaah" onchange="changePerPage()"><option value="10">10</option><option value="20">20</option><option value="50">50</option><option value="100">100</option><option value="all">Semua</option></select></div>
         <div id="jamaahListContainer"></div><div id="paginationContainer" class="pagination"></div>
         <button class="btn btn-wa" onclick="shareAllJamaahToWA()"><i class="fab fa-whatsapp"></i> SHARE SEMUA JAMAAH KE WA</button>
-        <div class="section-title" style="margin-top:20px;"><span>Backup & Restore database</span></div>
-        <div class="row"><button class="btn btn-blue btn-small" onclick="backupJamaahData()" style="flex:1"><i class="fas fa-download"></i> BACKUP JAMAAH</button><button class="btn btn-orange btn-small" onclick="document.getElementById('restoreJamaahFile').click()" style="flex:1"><i class="fas fa-upload"></i> RESTORE JAMAAH</button></div>
-        <div class="row" style="margin-top:8px;"><button class="btn btn-small mt-2" onclick="downloadTemplateExcel()" style="flex:1;background:#1D6F42;color:white;">⬇️ Download Template Excel</button><button class="btn btn-small mt-2" onclick="document.getElementById('importExcelFile2').click()" style="flex:1;background:#F59E0B;color:white;">⬆️ Import Excel</button></div>
+        <div class="row" style="margin-top:20px;"><button class="btn btn-small mt-2" onclick="downloadTemplateExcel()" style="flex:1;background:#1D6F42;color:white;">⬇️ Download Template Excel</button><button class="btn btn-small mt-2" onclick="document.getElementById('importExcelFile2').click()" style="flex:1;background:#F59E0B;color:white;">⬆️ Import Excel</button></div>
         <input type="file" id="importExcelFile2" accept=".xlsx,.xls" style="display:none" onchange="importJamaahFromExcel(this)">
-        <input type="file" id="restoreJamaahFile" accept=".json" style="display:none" onchange="restoreJamaahData(this)">
     </div>
 </div>
 
@@ -2150,11 +2143,6 @@
                 </div>
             </div>
         </div>
-        <div class="row" style="margin-top:12px;">
-            <button class="btn btn-blue btn-small" onclick="backupJamaahKitaData()" style="flex:1;"><i class="fas fa-download"></i> BACKUP</button>
-            <button class="btn btn-orange btn-small" onclick="document.getElementById('restoreJamaahKitaFile').click()" style="flex:1;"><i class="fas fa-upload"></i> RESTORE</button>
-        </div>
-        <input type="file" id="restoreJamaahKitaFile" accept=".json" style="display:none" onchange="restoreJamaahKitaData(this)">
     </div>
 </div>
 
@@ -2279,8 +2267,6 @@
             <button id="sortMaster_terbaru" onclick="setMasterSort('terbaru')" style="flex-shrink:0;padding:6px 12px;border-radius:20px;border:1.5px solid #ddd;background:white;color:#333;font-size:12px;cursor:pointer;">🆕 Baru</button>
         </div>
         <div class="master-grid-container"><table class="master-grid-table" id="masterTable"><thead id="masterTableHead"></thead><tbody id="masterTableBody"></tbody></table></div>
-        <div class="row"><button class="btn btn-blue btn-small" onclick="backupMasterData()" style="flex:1"><i class="fas fa-download"></i> BACKUP</button><button class="btn btn-orange btn-small" onclick="document.getElementById('restoreMasterFile').click()" style="flex:1"><i class="fas fa-upload"></i> RESTORE</button></div>
-        <input type="file" id="restoreMasterFile" accept=".json" style="display:none" onchange="restoreMasterData(this)">
     </div>
 </div>
 
@@ -3902,39 +3888,6 @@ function salinLaporanWA() {
         navigator.clipboard.writeText(lastWAText).then(()=>showToast("📋 Laporan tersalin!")).catch(()=>showToast("❌ Gagal menyalin")); 
     } else { 
         showToast('Buat laporan dulu!'); 
-    } 
-}
-
-function backupKasData() { 
-    if(dataKas.length===0) return showToast("Tidak ada data!"); 
-    const backup={app:"Navara - Kas", version:"1.0", created:new Date().toISOString(), kegiatan:document.getElementById('kegiatan').value, data:dataKas}; 
-    const a=document.createElement('a'); 
-    a.href=URL.createObjectURL(new Blob([JSON.stringify(backup,null,2)],{type:'application/json'})); 
-    a.download=`Navara_Kas_Backup_${new Date().toLocaleDateString('id-ID').replace(/\//g,'-')}.json`; 
-    a.click(); 
-    showToast('Backup kas berhasil'); 
-}
-
-function restoreKasData(input) { 
-    const file=input.files[0]; 
-    if(!file) return; 
-    input.value=''; 
-    if(confirm("Timpa data kas yang ada?")) { 
-        const reader=new FileReader(); 
-        reader.onload=e=>{ 
-            try{ 
-                const backup=JSON.parse(e.target.result); 
-                if(backup.data&&Array.isArray(backup.data)){ 
-                    dataKas=backup.data; 
-                    if(backup.kegiatan) document.getElementById('kegiatan').value=backup.kegiatan; 
-                    saveKasData(); 
-                    showToast(`Restore ${dataKas.length} transaksi berhasil`); 
-                } else showToast("File backup tidak valid!"); 
-            } catch(err){ 
-                showToast("File backup tidak valid!"); 
-            } 
-        }; 
-        reader.readAsText(file); 
     } 
 }
 
@@ -6206,42 +6159,6 @@ function exportJamaahToExcel(){
     showToast('Excel berhasil di-export'); 
 }
 
-function backupJamaahData(){ 
-    if(jamaahList.length===0 && dynamicFieldsJamaah.length===0) return showToast("Tidak ada data!"); 
-    const backup={app:"Navara - database", version:"1.0", created:new Date().toISOString(), fields:dynamicFieldsJamaah, data:jamaahList}; 
-    const a=document.createElement('a'); 
-    a.href=URL.createObjectURL(new Blob([JSON.stringify(backup,null,2)],{type:'application/json'})); 
-    a.download=`Navara_Jamaah_Backup_${new Date().toLocaleDateString('id-ID').replace(/\//g,'-')}.json`; 
-    a.click(); 
-    showToast('Backup jamaah berhasil'); 
-}
-
-function restoreJamaahData(input){ 
-    const file=input.files[0]; 
-    if(!file) return; 
-    input.value=''; 
-    if(confirm("Timpa database yang ada?")) { 
-        const reader=new FileReader(); 
-        reader.onload=e=>{ 
-            try{ 
-                const backup=JSON.parse(e.target.result); 
-                if(backup.data&&Array.isArray(backup.data)){ 
-                    jamaahList=backup.data; 
-                    if(backup.fields){ 
-                        dynamicFieldsJamaah=backup.fields; 
-                        saveDynamicFieldsJamaah(); 
-                    } 
-                    saveJamaahData(); 
-                    showToast(`Restore ${jamaahList.length} data berhasil`); 
-                } else showToast("File backup tidak valid!"); 
-            } catch(err){ 
-                showToast("File backup tidak valid!"); 
-            } 
-        }; 
-        reader.readAsText(file); 
-    } 
-}
-
 function openManageFieldsModal(){ 
     if(!isAdminModePremium) return showToast('Aktifkan Mode Admin dulu!'); 
     renderFieldsList(); 
@@ -7429,40 +7346,6 @@ function confirmDeleteAllJamaahKita() {
         renderJamaahKitaList();
         showToast('Semua data Jamaah on proses telah dihapus');
     }
-}
-
-function backupJamaahKitaData() {
-    if (jamaahKitaList.length === 0 && dynamicFieldsJamaahKita.length === 0) return showToast("Tidak ada data!");
-    const backup = { app: "Navara - Jamaah On Proses", version: "2.0", date: new Date().toISOString(), onProsesList: jamaahKitaList, dynamicFields: dynamicFieldsJamaahKita };
-    const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `navara_onproses_backup_${new Date().toLocaleDateString("id-ID").replace(/\//g, "-")}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    showToast('Backup berhasil!');
-}
-
-function restoreJamaahKitaData(input) {
-    const file = input.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        try {
-            const data = JSON.parse(e.target.result);
-            if (data.onProsesList) jamaahKitaList = data.onProsesList;
-            if (data.dynamicFields) dynamicFieldsJamaahKita = data.dynamicFields;
-            saveJamaahKitaData();
-            renderJamaahKitaList();
-            renderPilihJamaahKita();
-            renderJamaahKitaDynamicFieldsForm();
-            if (isAdminModePremium) renderJamaahKitaFieldsList();
-            showToast('Restore berhasil!');
-        } catch (err) { showToast('File tidak valid!'); }
-    };
-    reader.readAsText(file);
-    input.value = "";
 }
 
 function printGroupedPDF() { showGroupDialogJamaahKita(); }
@@ -11383,41 +11266,6 @@ function exportMasterExcel() {
     XLSX.utils.book_append_sheet(wb, ws, getMasterJudul());
     XLSX.writeFile(wb, `${getMasterJudul().replace(/\s+/g,'_')}.xlsx`);
     showToast('Excel berhasil di-export');
-}
-
-function backupMasterData() {
-    if(masterDataList.length === 0 && masterDynamicFields.length === 0) { showToast('Tidak ada data!'); return; }
-    const backup = { app: "Navara - Multi Event", version: "1.0", created: new Date().toISOString(), judul: getMasterJudul(), fields: masterDynamicFields, items: masterItemList, data: masterDataList };
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(new Blob([JSON.stringify(backup, null, 2)], {type:'application/json'}));
-    a.download = `Navara_DataMaster_${new Date().toLocaleDateString('id-ID').replace(/\//g,'-')}.json`;
-    a.click();
-    showToast('Backup berhasil');
-}
-
-function restoreMasterData(input) {
-    const file = input.files[0];
-    if(!file) return;
-    input.value = '';
-    if(confirm('Timpa data yang ada?')) {
-        const reader = new FileReader();
-        reader.onload = e => {
-            try {
-                const backup = JSON.parse(e.target.result);
-                if(backup.data && Array.isArray(backup.data)) {
-                    masterDataList = backup.data;
-                    if(backup.fields) masterDynamicFields = backup.fields;
-                    if(backup.items) masterItemList = backup.items;
-                    if(backup.judul && document.getElementById('masterJudul')) document.getElementById('masterJudul').value = backup.judul;
-                    saveMasterDataToLocal();
-                    renderMasterForm();
-                    renderMasterTable();
-                    showToast(`Restore ${masterDataList.length} data berhasil`);
-                } else showToast('File tidak valid!');
-            } catch(err) { showToast('File tidak valid!'); }
-        };
-        reader.readAsText(file);
-    }
 }
 
 function openMasterSetting() {
