@@ -2828,6 +2828,9 @@
                 <button class="btn btn-orange btn-small" onclick="document.getElementById('restoreZipFileInput').click()" style="flex:1;font-size:12px;"><i class="fas fa-upload"></i> Restore ZIP</button>
                 <button class="btn btn-small" onclick="document.getElementById('restoreJsonFileInput').click()" style="flex:1;background:#8B5CF6;color:white;font-size:12px;"><i class="fas fa-upload"></i> Restore JSON</button>
             </div>
+            <div style="text-align:center;margin-top:6px;">
+                <a href="#" onclick="showRestoreJsonPasteModal();return false;" style="font-size:11px;color:#8B5CF6;text-decoration:underline;">Upload gagal? Tempel teks JSON manual</a>
+            </div>
             <input type="file" id="restoreZipFileInput" accept=".zip" style="display:none" onchange="restoreFromZip(this)">
             <input type="file" id="restoreJsonFileInput" accept=".json" style="display:none" onchange="restoreFromJson(this)">
         </div>
@@ -2841,12 +2844,6 @@
                 <button id="driveDisconnectBtn" class="btn-connect" style="display:none; background: var(--gray-light); color: var(--dark);" onclick="disconnectDrive()"> Putus</button></div>
             </div>
         </div>
-        
-       <div class="card-premium"><div class="cloud-item"><div class="cloud-info"><div class="cloud-icon"><i class="fab fa-dropbox"></i></div><div><div class="cloud-name">Dropbox</div><div class="cloud-status"><span class="status-disconnected"> Belum Terhubung</span></div></div></div><div><button class="btn-connect" onclick="showToast(' Fitur Dropbox akan segera hadir!')"> Hubungkan</button></div></div></div>
-        
-        <div class="card-premium"><div class="cloud-item"><div class="cloud-info"><div class="cloud-icon"><i class="fas fa-cloud"></i></div><div><div class="cloud-name">OneDrive</div><div class="cloud-status"><span class="status-disconnected"> Belum Terhubung</span></div></div></div><div><button class="btn-connect" onclick="showToast(' Fitur OneDrive akan segera hadir!')"> Hubungkan</button></div></div></div>
-
-        <div class="card-premium"><div class="cloud-item"><div class="cloud-info"><div class="cloud-icon"><i class="fas fa-cloud"></i></div><div><div class="cloud-name">Yandex Drive</div><div class="cloud-status"><span class="status-disconnected"> Belum Terhubung</span></div></div></div><div><button class="btn-connect" onclick="showToast('Fitur Yandex Drive akan segera hadir!')"> Hubungkan</button></div></div></div>
     </div>
 </div>
 
@@ -9589,7 +9586,7 @@ function updateStorageInfo() {
 
 async function bagikanFullZip() {
     try {
-        showToast('⏳ Menyiapkan file...');
+        showToast('⏳ Menyiapkan data...');
         const backupData = {
             app: 'Navara',
             version: '2.0',
@@ -9609,22 +9606,90 @@ async function bagikanFullZip() {
         const fileName = `Navara_Backup_${date}.json`;
         const file = new File([json], fileName, { type: 'application/json' });
 
+        // Coba 1: Web Share API dengan file
         if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-            await navigator.share({
-                files: [file],
-                title: 'Backup Navara',
-                text: 'Backup data Navara - ' + date
-            });
-        } else {
-            // Fallback ke download
+            try {
+                await navigator.share({ files: [file], title: 'Backup Navara', text: 'Backup data Navara - ' + date });
+                return;
+            } catch(shareErr) {
+                if (shareErr.name === 'AbortError') return; // user batal, jangan lanjut fallback
+                console.warn('Share gagal, coba download:', shareErr);
+            }
+        }
+
+        // Coba 2: Download via blob
+        try {
             const a = document.createElement('a');
             a.href = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
             a.download = fileName;
+            document.body.appendChild(a);
             a.click();
+            document.body.removeChild(a);
             showToast('⬇️ File JSON didownload');
+            return;
+        } catch(downloadErr) {
+            console.warn('Download gagal, pakai fallback modal:', downloadErr);
         }
+
+        // Fallback 3: Tampilkan modal dengan teks JSON untuk di-copy manual
+        showJsonBackupModal(json, fileName);
+
     } catch(err) {
-        if (err.name !== 'AbortError') showToast('❌ Gagal: ' + err.message);
+        // Kalau semua cara di atas error sebelum sempat dicoba, tetap tampilkan fallback modal
+        try {
+            const backupData = {
+                app: 'Navara', version: '2.0', created: new Date().toISOString(),
+                jamaah: { data: jamaahList, fields: dynamicFieldsJamaah },
+                jamaah_kita: { data: jamaahKitaList, fields: dynamicFieldsJamaahKita },
+                folder: folderList, kas: dataKas, pembayaran: paymentTransaksiList,
+                multi_event: masterDataList, dokumen_jenis: dokumenJenisList,
+                konfigurasi: konfigurasiPro,
+                catatan: JSON.parse(localStorage.getItem('navara_catatan_list') || '[]')
+            };
+            const json = JSON.stringify(backupData);
+            const date = new Date().toISOString().slice(0, 10);
+            showJsonBackupModal(json, `Navara_Backup_${date}.json`);
+        } catch(e2) {
+            showToast('❌ Gagal menyiapkan backup: ' + e2.message);
+        }
+    }
+}
+
+function showJsonBackupModal(json, fileName) {
+    let modal = document.getElementById('jsonBackupModal');
+    if(!modal) {
+        modal = document.createElement('div');
+        modal.id = 'jsonBackupModal';
+        modal.className = 'modal';
+        document.body.appendChild(modal);
+    }
+    modal.innerHTML = `<div class="modal-content" style="max-width:500px;">
+        <h3 style="color:#0D5C4A;margin-bottom:10px;">📋 Backup Data (JSON)</h3>
+        <div style="background:#fef3c7;border:1.5px solid #f59e0b;border-radius:10px;padding:10px;margin-bottom:12px;font-size:12px;color:#92400e;">
+            ⚠️ Share/download otomatis tidak didukung di sini. Salin teks di bawah, lalu tempel ke <strong>WhatsApp (Catatan Pribadi)</strong> atau aplikasi Notes untuk menyimpannya.
+        </div>
+        <textarea id="jsonBackupText" readonly style="width:100%;height:150px;padding:10px;border:1.5px solid #ddd;border-radius:8px;font-size:11px;font-family:monospace;margin-bottom:12px;" onclick="this.select()">${json.replace(/</g,'&lt;')}</textarea>
+        <button onclick="copyJsonBackup()" style="width:100%;padding:12px;background:#3B82F6;color:white;border:none;border-radius:10px;font-size:14px;font-weight:bold;cursor:pointer;margin-bottom:8px;">📋 Copy ke Clipboard</button>
+        <button onclick="document.getElementById('jsonBackupModal').style.display='none'" style="width:100%;padding:11px;background:#e2e8f0;color:#333;border:none;border-radius:10px;font-size:13px;cursor:pointer;">Tutup</button>
+    </div>`;
+    modal.style.display = 'flex';
+}
+
+function copyJsonBackup() {
+    const textarea = document.getElementById('jsonBackupText');
+    if(!textarea) return;
+    textarea.select();
+    textarea.setSelectionRange(0, 999999);
+    try {
+        navigator.clipboard.writeText(textarea.value).then(() => {
+            showToast('✅ Tersalin! Tempel ke WhatsApp/Notes untuk simpan.');
+        }).catch(() => {
+            document.execCommand('copy');
+            showToast('✅ Tersalin! Tempel ke WhatsApp/Notes untuk simpan.');
+        });
+    } catch(e) {
+        document.execCommand('copy');
+        showToast('✅ Tersalin! Tempel ke WhatsApp/Notes untuk simpan.');
     }
 }
 
@@ -9671,6 +9736,65 @@ async function downloadFullZip() {
     } catch(e) { showToast('❌ Gagal membuat ZIP: ' + e.message); } 
 }
 
+function showRestoreJsonPasteModal() {
+    let modal = document.getElementById('restoreJsonPasteModal');
+    if(!modal) {
+        modal = document.createElement('div');
+        modal.id = 'restoreJsonPasteModal';
+        modal.className = 'modal';
+        document.body.appendChild(modal);
+    }
+    modal.innerHTML = `<div class="modal-content" style="max-width:500px;">
+        <h3 style="color:#0D5C4A;margin-bottom:10px;">📥 Restore via Tempel Teks</h3>
+        <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:10px;padding:10px;margin-bottom:12px;font-size:12px;color:#166534;">
+            Tempel (paste) teks backup JSON yang sebelumnya Anda salin, lalu klik Restore.
+        </div>
+        <textarea id="restoreJsonPasteText" placeholder="Tempel teks JSON di sini..." style="width:100%;height:150px;padding:10px;border:1.5px solid #ddd;border-radius:8px;font-size:11px;font-family:monospace;margin-bottom:12px;"></textarea>
+        <button onclick="processRestoreJsonText()" style="width:100%;padding:12px;background:#8B5CF6;color:white;border:none;border-radius:10px;font-size:14px;font-weight:bold;cursor:pointer;margin-bottom:8px;">🔄 Restore Sekarang</button>
+        <button onclick="document.getElementById('restoreJsonPasteModal').style.display='none'" style="width:100%;padding:11px;background:#e2e8f0;color:#333;border:none;border-radius:10px;font-size:13px;cursor:pointer;">Batal</button>
+    </div>`;
+    modal.style.display = 'flex';
+}
+
+async function processRestoreJsonText() {
+    const text = document.getElementById('restoreJsonPasteText')?.value.trim();
+    if(!text) return showToast('Tempel teks JSON dulu!');
+    if (!confirm('Restore akan menimpa semua data yang ada (kecuali foto & dokumen). Lanjutkan?')) return;
+    showToast('⏳ Memulihkan data...');
+    try {
+        const backup = JSON.parse(text);
+        await applyRestoreBackupData(backup);
+        const modal = document.getElementById('restoreJsonPasteModal');
+        if(modal) modal.style.display = 'none';
+        showToast('✅ Restore berhasil! Memuat ulang...');
+        setTimeout(() => location.reload(), 2000);
+    } catch(err) {
+        showToast('❌ Gagal restore: ' + err.message + ' (pastikan teks JSON lengkap & valid)');
+    }
+}
+
+async function applyRestoreBackupData(backup) {
+    if (backup.jamaah) {
+        jamaahList = backup.jamaah.data || [];
+        if (backup.jamaah.fields) dynamicFieldsJamaah = backup.jamaah.fields;
+        await idbSet(STORE_JAMAAH, 'jamaah_list', jamaahList);
+        await idbSet(STORE_JAMAAH, 'jamaah_fields', dynamicFieldsJamaah);
+    }
+    if (backup.jamaah_kita) {
+        jamaahKitaList = backup.jamaah_kita.data || [];
+        if (backup.jamaah_kita.fields) dynamicFieldsJamaahKita = backup.jamaah_kita.fields;
+        await idbSet(STORE_JAMAAH_KITA, 'kita_list', jamaahKitaList);
+        await idbSet(STORE_JAMAAH_KITA, 'kita_fields', dynamicFieldsJamaahKita);
+    }
+    if (backup.folder) { folderList = backup.folder; await idbSet(STORE_FOLDER, 'folder_list', folderList); }
+    if (backup.kas) { dataKas = backup.kas; await idbSet(STORE_KAS, 'kas_data', dataKas); }
+    if (backup.pembayaran) { paymentTransaksiList = backup.pembayaran; await idbSet(STORE_PEMBAYARAN, 'pembayaran_list', paymentTransaksiList); }
+    if (backup.multi_event) { masterDataList = backup.multi_event; await idbSet(STORE_MASTER, 'master_data', masterDataList); }
+    if (backup.dokumen_jenis) { dokumenJenisList = backup.dokumen_jenis; await saveDokumenJenisToIndexedDB(); }
+    if (backup.konfigurasi) { konfigurasiPro = { ...konfigurasiPro, ...backup.konfigurasi }; await idbSet(STORE_KONFIGURASI, 'konfigurasi_pro', konfigurasiPro); }
+    if (backup.catatan) localStorage.setItem('navara_catatan_list', JSON.stringify(backup.catatan));
+}
+
 function restoreFromJson(input) {
     const file = input.files[0];
     if (!file) return;
@@ -9680,35 +9804,7 @@ function restoreFromJson(input) {
     reader.onload = async function(e) {
         try {
             const backup = JSON.parse(e.target.result);
-            // Jamaah
-            if (backup.jamaah) {
-                jamaahList = backup.jamaah.data || [];
-                if (backup.jamaah.fields) dynamicFieldsJamaah = backup.jamaah.fields;
-                await idbSet(STORE_JAMAAH, 'jamaah_list', jamaahList);
-                await idbSet(STORE_JAMAAH, 'jamaah_fields', dynamicFieldsJamaah);
-            }
-            // On Proses
-            if (backup.jamaah_kita) {
-                jamaahKitaList = backup.jamaah_kita.data || [];
-                if (backup.jamaah_kita.fields) dynamicFieldsJamaahKita = backup.jamaah_kita.fields;
-                await idbSet(STORE_JAMAAH_KITA, 'kita_list', jamaahKitaList);
-                await idbSet(STORE_JAMAAH_KITA, 'kita_fields', dynamicFieldsJamaahKita);
-            }
-            // Folder
-            if (backup.folder) { folderList = backup.folder; await idbSet(STORE_FOLDER, 'folder_list', folderList); }
-            // Kas
-            if (backup.kas) { dataKas = backup.kas; await idbSet(STORE_KAS, 'kas_data', dataKas); }
-            // Pembayaran
-            if (backup.pembayaran) { paymentTransaksiList = backup.pembayaran; await idbSet(STORE_PEMBAYARAN, 'pembayaran_list', paymentTransaksiList); }
-            // Multi Event
-            if (backup.multi_event) { masterDataList = backup.multi_event; await idbSet(STORE_MASTER, 'master_data', masterDataList); }
-            // Jenis Dokumen
-            if (backup.dokumen_jenis) { dokumenJenisList = backup.dokumen_jenis; await saveDokumenJenisToIndexedDB(); }
-            // Konfigurasi
-            if (backup.konfigurasi) { konfigurasiPro = { ...konfigurasiPro, ...backup.konfigurasi }; await idbSet(STORE_KONFIGURASI, 'konfigurasi_pro', konfigurasiPro); }
-            // Catatan
-            if (backup.catatan) localStorage.setItem('navara_catatan_list', JSON.stringify(backup.catatan));
-
+            await applyRestoreBackupData(backup);
             showToast('✅ Restore JSON berhasil! Memuat ulang...');
             setTimeout(() => location.reload(), 2000);
         } catch(err) {
