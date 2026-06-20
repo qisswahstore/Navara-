@@ -6199,34 +6199,33 @@ function openRekapKategoriModal() {
         return;
     }
 
-    const options = dropdownFields.map(f => `<option value="${f.name}">${escapeHtml(f.label)}</option>`).join('');
-    modal.innerHTML = `<div class="modal-content" style="max-width:400px;">
+    const checkboxes = dropdownFields.map(f => `
+        <label style="display:flex;align-items:center;gap:10px;padding:10px;border:1.5px solid #e2e8f0;border-radius:8px;margin-bottom:8px;cursor:pointer;">
+            <input type="checkbox" class="rekapKategoriCheck" value="${f.name}" checked style="width:18px;height:18px;">
+            <span>${escapeHtml(f.label)}</span>
+        </label>`).join('');
+
+    modal.innerHTML = `<div class="modal-content" style="max-width:420px;">
         <h3 style="color:#0D5C4A;margin-bottom:10px;">📊 Rekap per Kategori</h3>
-        <div class="dynamic-field" style="margin-bottom:16px;">
-            <label>Pilih Field untuk Direkap</label>
-            <select id="rekapKategoriField" style="width:100%;padding:10px;border:1.5px solid #ddd;border-radius:8px;">${options}</select>
+        <div style="font-size:12px;color:#888;margin-bottom:10px;">Pilih kategori yang mau direkap (bisa lebih dari satu, jadi 1 lembar):</div>
+        <div style="max-height:280px;overflow-y:auto;margin-bottom:14px;">${checkboxes}</div>
+        <div style="display:flex;gap:8px;margin-bottom:14px;">
+            <button onclick="toggleAllRekapKategori(true)" style="flex:1;padding:8px;background:#f0fdf4;color:#166534;border:1px solid #86efac;border-radius:8px;font-size:12px;cursor:pointer;">Pilih Semua</button>
+            <button onclick="toggleAllRekapKategori(false)" style="flex:1;padding:8px;background:#fef2f2;color:#991b1b;border:1px solid #fca5a5;border-radius:8px;font-size:12px;cursor:pointer;">Batal Semua</button>
         </div>
-        <button onclick="cetakRekapKategori()" style="width:100%;padding:12px;background:#8B5CF6;color:white;border:none;border-radius:10px;font-size:14px;font-weight:bold;cursor:pointer;margin-bottom:8px;">🖨️ Cetak Rekap</button>
+        <button onclick="cetakRekapKategori()" style="width:100%;padding:12px;background:#8B5CF6;color:white;border:none;border-radius:10px;font-size:14px;font-weight:bold;cursor:pointer;margin-bottom:8px;">🖨️ Cetak Rekap Terpilih</button>
         <button onclick="document.getElementById('rekapKategoriModal').style.display='none'" style="width:100%;padding:11px;background:#e2e8f0;color:#333;border:none;border-radius:10px;font-size:13px;cursor:pointer;">Batal</button>
     </div>`;
     modal.style.display = 'flex';
 }
 
-async function cetakRekapKategori() {
-    const fieldName = document.getElementById('rekapKategoriField')?.value;
-    if(!fieldName) return showToast('Pilih field dulu!');
-    const field = dynamicFieldsJamaah.find(f => f.name === fieldName);
-    if(!field) return showToast('Field tidak ditemukan!');
+function toggleAllRekapKategori(checked) {
+    document.querySelectorAll('.rekapKategoriCheck').forEach(cb => cb.checked = checked);
+}
 
-    // Hitung jumlah per pilihan
-    const counts = {};
-    (field.options || []).forEach(opt => counts[opt] = 0);
-    let kosong = 0;
-    jamaahList.forEach(j => {
-        const val = j.additional_fields?.[fieldName] || '';
-        if(!val) { kosong++; return; }
-        counts[val] = (counts[val] || 0) + 1;
-    });
+async function cetakRekapKategori() {
+    const checked = document.querySelectorAll('.rekapKategoriCheck:checked');
+    if(checked.length === 0) return showToast('Pilih minimal 1 kategori!');
 
     const total = jamaahList.length;
     const cfg = getKonfigurasiProData();
@@ -6235,41 +6234,64 @@ async function cetakRekapKategori() {
     const headerHtml = buildPrintHeader(cfg, tanggal);
     const watermarkHtml = buildPrintWatermark(cfg);
 
-    let rowsHtml = '';
-    Object.keys(counts).forEach(opt => {
-        const jumlah = counts[opt];
-        const persen = total > 0 ? ((jumlah/total)*100).toFixed(1) : 0;
-        rowsHtml += `<tr><td style="padding:10px;border-bottom:1px solid #eee;">${escapeHtml(opt)}</td><td style="padding:10px;border-bottom:1px solid #eee;text-align:center;font-weight:bold;">${jumlah}</td><td style="padding:10px;border-bottom:1px solid #eee;text-align:center;color:#888;">${persen}%</td></tr>`;
-    });
-    if(kosong > 0) {
-        const persenKosong = total > 0 ? ((kosong/total)*100).toFixed(1) : 0;
-        rowsHtml += `<tr><td style="padding:10px;border-bottom:1px solid #eee;color:#999;font-style:italic;">(Belum diisi)</td><td style="padding:10px;border-bottom:1px solid #eee;text-align:center;font-weight:bold;color:#999;">${kosong}</td><td style="padding:10px;border-bottom:1px solid #eee;text-align:center;color:#888;">${persenKosong}%</td></tr>`;
-    }
+    let sectionsHtml = '';
+    checked.forEach(cb => {
+        const fieldName = cb.value;
+        const field = dynamicFieldsJamaah.find(f => f.name === fieldName);
+        if(!field) return;
 
-    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Rekap ${field.label}</title>
+        const counts = {};
+        (field.options || []).forEach(opt => counts[opt] = 0);
+        let kosong = 0;
+        jamaahList.forEach(j => {
+            const val = j.additional_fields?.[fieldName] || '';
+            if(!val) { kosong++; return; }
+            counts[val] = (counts[val] || 0) + 1;
+        });
+
+        let rowsHtml = '';
+        Object.keys(counts).forEach(opt => {
+            const jumlah = counts[opt];
+            const persen = total > 0 ? ((jumlah/total)*100).toFixed(1) : 0;
+            rowsHtml += `<tr><td style="padding:8px;border-bottom:1px solid #eee;">${escapeHtml(opt)}</td><td style="padding:8px;border-bottom:1px solid #eee;text-align:center;font-weight:bold;">${jumlah}</td><td style="padding:8px;border-bottom:1px solid #eee;text-align:center;color:#888;">${persen}%</td></tr>`;
+        });
+        if(kosong > 0) {
+            const persenKosong = total > 0 ? ((kosong/total)*100).toFixed(1) : 0;
+            rowsHtml += `<tr><td style="padding:8px;border-bottom:1px solid #eee;color:#999;font-style:italic;">(Belum diisi)</td><td style="padding:8px;border-bottom:1px solid #eee;text-align:center;font-weight:bold;color:#999;">${kosong}</td><td style="padding:8px;border-bottom:1px solid #eee;text-align:center;color:#888;">${persenKosong}%</td></tr>`;
+        }
+
+        sectionsHtml += `
+            <div style="margin-bottom:24px;">
+                <h3 style="color:#0D5C4A;margin-bottom:8px;font-size:15px;border-left:4px solid #0D5C4A;padding-left:10px;">${escapeHtml(field.label)}</h3>
+                <table style="width:100%;border-collapse:collapse;">
+                    <thead><tr><th style="background:#0D5C4A;color:white;padding:8px;text-align:left;">${escapeHtml(field.label)}</th><th style="background:#0D5C4A;color:white;padding:8px;text-align:center;">Jumlah</th><th style="background:#0D5C4A;color:white;padding:8px;text-align:center;">%</th></tr></thead>
+                    <tbody>
+                        ${rowsHtml}
+                        <tr style="background:#f0fdf4;font-weight:bold;"><td style="padding:8px;">TOTAL</td><td style="padding:8px;text-align:center;">${total}</td><td style="padding:8px;text-align:center;">100%</td></tr>
+                    </tbody>
+                </table>
+            </div>`;
+    });
+
+    const judulGabungan = checked.length === 1
+        ? dynamicFieldsJamaah.find(f => f.name === checked[0].value)?.label.toUpperCase()
+        : 'GABUNGAN KATEGORI';
+
+    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Rekap Kategori</title>
     <style>
         @page { size: A4 portrait; margin: 10mm 12mm; }
         * { box-sizing: border-box; }
         body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f0f0f0; }
         .box { background: white; max-width: 800px; margin: 0 auto; border-radius: 16px; padding: 30px; box-shadow: 0 2px 16px rgba(0,0,0,0.1); position: relative; overflow: hidden; }
-        table { width: 100%; border-collapse: collapse; margin-top: 16px; }
-        th { background: #0D5C4A; color: white; padding: 10px; text-align: left; }
-        .total-row { background: #f0fdf4; font-weight: bold; }
         @media print { body { background: white; padding: 0; } .box { box-shadow: none; border-radius: 0; } .no-print { display: none; } }
     </style></head><body>
     <div class="box">
         ${watermarkHtml}
         <div style="position:relative;z-index:1;">
             ${headerHtml}
-            <h2 style="color:#0D5C4A;margin-bottom:4px;">📊 REKAP ${field.label.toUpperCase()}</h2>
-            <div style="color:#888;font-size:12px;margin-bottom:16px;">${namaInstansi} · Total Jamaah: ${total} orang · Dicetak: ${tanggal}</div>
-            <table>
-                <thead><tr><th>${escapeHtml(field.label)}</th><th style="text-align:center;">Jumlah</th><th style="text-align:center;">Persentase</th></tr></thead>
-                <tbody>
-                    ${rowsHtml}
-                    <tr class="total-row"><td style="padding:10px;">TOTAL</td><td style="padding:10px;text-align:center;">${total}</td><td style="padding:10px;text-align:center;">100%</td></tr>
-                </tbody>
-            </table>
+            <h2 style="color:#0D5C4A;margin-bottom:4px;">📊 REKAP ${judulGabungan}</h2>
+            <div style="color:#888;font-size:12px;margin-bottom:20px;">${namaInstansi} · Total Jamaah: ${total} orang · Dicetak: ${tanggal}</div>
+            ${sectionsHtml}
         </div>
     </div>
     <div class="no-print" style="text-align:center;margin-top:16px;">
