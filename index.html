@@ -2029,7 +2029,7 @@
 <div id="page-jamaah" class="page">
     <div class="header-premium header-premium-small"><div class="back-header"><i class="fas fa-arrow-left" onclick="showPage('home')"></i><h2>Database Jamaah</h2><div style="width:30px;"></div></div></div>
     <div class="card-premium">
-        <div id="jamaahAdminPanel" class="setting-card" style="display:none"><h3 style="color:var(--primary);"> Panel Admin Jamaah</h3><button class="btn btn-primary btn-small mt-2" onclick="openTambahJamaahModal()"> + Tambah database</button><button class="btn btn-blue btn-small mt-2" onclick="openManageFieldsModal()"> Kelola Field Dinamis</button><button class="btn btn-teal btn-small mt-2" onclick="downloadTemplateExcel()" style="background:#1D6F42;">⬇️ Download Template Excel</button><button class="btn btn-teal btn-small mt-2" onclick="exportJamaahToExcel()"> Export ke Excel</button><button class="btn btn-orange btn-small mt-2" onclick="document.getElementById('importExcelFile').click()"> IMPORT EXCEL</button><input type="file" id="importExcelFile" accept=".xlsx,.xls" style="display:none" onchange="importJamaahFromExcel(this)"><button class="btn btn-danger btn-small mt-2" onclick="confirmDeleteAllJamaah()"> HAPUS SEMUA database</button></div>
+        <div id="jamaahAdminPanel" class="setting-card" style="display:none"><h3 style="color:var(--primary);"> Panel Admin Jamaah</h3><button class="btn btn-primary btn-small mt-2" onclick="openTambahJamaahModal()"> + Tambah database</button><button class="btn btn-blue btn-small mt-2" onclick="openManageFieldsModal()"> Kelola Field Dinamis</button><button class="btn btn-small mt-2" onclick="openRekapKategoriModal()" style="background:#8B5CF6;color:white;"> 📊 Rekap per Kategori</button><button class="btn btn-teal btn-small mt-2" onclick="downloadTemplateExcel()" style="background:#1D6F42;">⬇️ Download Template Excel</button><button class="btn btn-teal btn-small mt-2" onclick="exportJamaahToExcel()"> Export ke Excel</button><button class="btn btn-orange btn-small mt-2" onclick="document.getElementById('importExcelFile').click()"> IMPORT EXCEL</button><input type="file" id="importExcelFile" accept=".xlsx,.xls" style="display:none" onchange="importJamaahFromExcel(this)"><button class="btn btn-danger btn-small mt-2" onclick="confirmDeleteAllJamaah()"> HAPUS SEMUA database</button></div>
         <div class="section-title"><span>DAFTAR JAMAAH</span></div>
         <div class="search-box"><input type="text" id="searchJamaahInput" placeholder=" Cari nama jamaah..." onkeyup="filterJamaahList()"><select id="sortJamaahSelect" onchange="sortJamaahList()"><option value="urutan_asli">Urutan asli</option><option value="nama_asc">Nama A-Z</option><option value="nama_desc">Nama Z-A</option><option value="tgl_asc">Tanggal lama ke baru</option><option value="tgl_desc">Tanggal baru ke lama</option></select><button onclick="resetJamaahFilter()">Reset</button></div>
         <div class="sort-buttons"><span style="font-size:12px; color:var(--gray);">Jumlah per halaman:</span><select id="perPageJamaah" onchange="changePerPage()"><option value="10">10</option><option value="20">20</option><option value="50">50</option><option value="100">100</option><option value="all">Semua</option></select></div>
@@ -2844,7 +2844,7 @@
 
 <!-- MODALS -->
 <div id="jamaahModal" class="modal"><div class="modal-content"><h3 id="jamaahModalTitle">Tambah database</h3><div id="jamaahFormContainer"></div><button class="btn btn-primary" onclick="saveJamaah()"> SIMPAN</button><button class="btn btn-danger mt-2" onclick="closeJamaahModal()">BATAL</button></div></div>
-<div id="fieldModal" class="modal"><div class="modal-content"><h3>Tambah Field Dinamis</h3><div class="dynamic-field"><label>Nama Field</label><input type="text" id="newFieldName" placeholder="Contoh: tanggal_lahir"><div class="error-message">Hanya huruf kecil, angka, underscore</div></div><div class="dynamic-field"><label>Label Field</label><input type="text" id="newFieldLabel" placeholder="Contoh: Tanggal Lahir"></div><div class="dynamic-field"><label>Tipe Field</label><select id="newFieldType"><option value="text">Text</option><option value="date">Tanggal</option><option value="tel">Telepon</option><option value="textarea">Text Area</option></select></div><div class="dynamic-field" style="display:flex;align-items:center;gap:8px;"><input type="checkbox" id="newFieldRahasia" style="width:18px;height:18px;"><label style="margin:0;">Sembunyikan di PDF Folder (Rahasia)</label></div><button class="btn btn-primary" onclick="addDynamicFieldJamaah()"> TAMBAH FIELD</button><button class="btn btn-danger mt-2" onclick="closeFieldModal()">BATAL</button></div></div>
+<div id="fieldModal" class="modal"><div class="modal-content"><h3>Tambah Field Dinamis</h3><div class="dynamic-field"><label>Nama Field</label><input type="text" id="newFieldName" placeholder="Contoh: tanggal_lahir"><div class="error-message">Hanya huruf kecil, angka, underscore</div></div><div class="dynamic-field"><label>Label Field</label><input type="text" id="newFieldLabel" placeholder="Contoh: Tanggal Lahir"></div><div class="dynamic-field"><label>Tipe Field</label><select id="newFieldType" onchange="toggleDropdownOptionsInput()"><option value="text">Text</option><option value="date">Tanggal</option><option value="tel">Telepon</option><option value="textarea">Text Area</option><option value="dropdown">Dropdown / Pilihan</option></select></div><div class="dynamic-field" id="dropdownOptionsWrap" style="display:none;"><label>Daftar Pilihan (pisahkan dengan koma)</label><input type="text" id="newFieldOptions" placeholder="Contoh: Tamattu', Ifrad, Qiran"><div class="error-message" style="color:#888;">Contoh lain: Ya, Tidak</div></div><div class="dynamic-field" style="display:flex;align-items:center;gap:8px;"><input type="checkbox" id="newFieldRahasia" style="width:18px;height:18px;"><label style="margin:0;">Sembunyikan di PDF Folder (Rahasia)</label></div><button class="btn btn-primary" onclick="addDynamicFieldJamaah()"> TAMBAH FIELD</button><button class="btn btn-danger mt-2" onclick="closeFieldModal()">BATAL</button></div></div>
 <div id="manageFieldsModal" class="modal"><div class="modal-content"><h3>Kelola Field Dinamis</h3><button class="btn btn-primary btn-small" style="margin-bottom:15px;" onclick="closeManageFieldsModal(); openFieldModal();">+ Tambah Field Baru</button><div id="fieldsListContainer"></div><button class="btn btn-primary mt-2" onclick="closeManageFieldsModal()">TUTUP</button></div></div>
 
 <div id="paymentModal" class="modal"><div class="modal-content"><h3> Input Pembayaran</h3><div class="input-group"><label> Tanggal</label><input type="date" id="paymentTanggal"></div><div class="input-group"><label> Nama Jamaah *</label><select id="paymentJamaahSelect"><option value="">-- Pilih Jamaah --</option></select></div><div class="input-group"><label> Nominal (Rp)</label><input type="number" id="paymentNominal" placeholder="Contoh: 5000000"></div><div class="input-group"><label> Metode</label><select id="paymentMetode"><option value="Transfer">Transfer</option><option value="Cash">Cash</option><option value="QRIS">QRIS</option></select></div><div class="input-group"><label> Keterangan</label><input type="text" id="paymentKeterangan" placeholder="DP / Cicilan / Pelunasan"></div><div class="row"><button class="btn btn-danger" onclick="closePaymentModal()" style="flex:1">Batal</button><button class="btn btn-primary" onclick="simpanPembayaran()" style="flex:1">Simpan</button></div></div></div>
@@ -6018,7 +6018,16 @@ function renderJamaahForm(){
     if(!container) return; 
     let html=`<div class="dynamic-field"><label>Nama Lengkap <span style="color:red;">*</span></label><input type="text" id="jamaahNamaLengkap" placeholder="Nama lengkap jamaah"></div>`; 
     for(const field of dynamicFieldsJamaah){ 
-        html+=`<div class="dynamic-field"><label>${escapeHtml(field.label)}</label>${field.type==='textarea'?`<textarea id="jamaahField_${field.name}" rows="3"></textarea>`:`<input type="${field.type}" id="jamaahField_${field.name}">`}</div>`; 
+        let inputHtml;
+        if(field.type === 'textarea') {
+            inputHtml = `<textarea id="jamaahField_${field.name}" rows="3"></textarea>`;
+        } else if(field.type === 'dropdown') {
+            const opts = (field.options || []).map(o => `<option value="${escapeHtml(o)}">${escapeHtml(o)}</option>`).join('');
+            inputHtml = `<select id="jamaahField_${field.name}"><option value="">-- Pilih --</option>${opts}</select>`;
+        } else {
+            inputHtml = `<input type="${field.type}" id="jamaahField_${field.name}">`;
+        }
+        html+=`<div class="dynamic-field"><label>${escapeHtml(field.label)}</label>${inputHtml}</div>`; 
     } 
     container.innerHTML=html; 
 }
@@ -6159,6 +6168,124 @@ function exportJamaahToExcel(){
     showToast('Excel berhasil di-export'); 
 }
 
+// ============================================
+// REKAP PER KATEGORI - generik untuk semua field dropdown
+// ============================================
+function getDropdownFieldsJamaah() {
+    return dynamicFieldsJamaah.filter(f => f.type === 'dropdown');
+}
+
+function openRekapKategoriModal() {
+    const dropdownFields = getDropdownFieldsJamaah();
+    let modal = document.getElementById('rekapKategoriModal');
+    if(!modal) {
+        modal = document.createElement('div');
+        modal.id = 'rekapKategoriModal';
+        modal.className = 'modal';
+        document.body.appendChild(modal);
+    }
+
+    if(dropdownFields.length === 0) {
+        modal.innerHTML = `<div class="modal-content" style="max-width:400px;">
+            <h3 style="color:#0D5C4A;margin-bottom:10px;">📊 Rekap per Kategori</h3>
+            <div style="background:#fef3c7;border:1.5px solid #f59e0b;border-radius:10px;padding:14px;margin-bottom:16px;font-size:13px;color:#92400e;">
+                Belum ada field bertipe <strong>Dropdown/Pilihan</strong>.<br><br>
+                Tambahkan dulu lewat <strong>Kelola Field Dinamis</strong> — misal "Jenis Haji" (Tamattu'/Ifrad/Qiran) atau "Kursi Roda" (Ya/Tidak).
+            </div>
+            <button onclick="document.getElementById('rekapKategoriModal').style.display='none';openManageFieldsModal();" style="width:100%;padding:12px;background:#0D5C4A;color:white;border:none;border-radius:10px;font-size:14px;font-weight:bold;cursor:pointer;margin-bottom:8px;">⚙️ Buka Kelola Field</button>
+            <button onclick="document.getElementById('rekapKategoriModal').style.display='none'" style="width:100%;padding:11px;background:#e2e8f0;color:#333;border:none;border-radius:10px;font-size:13px;cursor:pointer;">Tutup</button>
+        </div>`;
+        modal.style.display = 'flex';
+        return;
+    }
+
+    const options = dropdownFields.map(f => `<option value="${f.name}">${escapeHtml(f.label)}</option>`).join('');
+    modal.innerHTML = `<div class="modal-content" style="max-width:400px;">
+        <h3 style="color:#0D5C4A;margin-bottom:10px;">📊 Rekap per Kategori</h3>
+        <div class="dynamic-field" style="margin-bottom:16px;">
+            <label>Pilih Field untuk Direkap</label>
+            <select id="rekapKategoriField" style="width:100%;padding:10px;border:1.5px solid #ddd;border-radius:8px;">${options}</select>
+        </div>
+        <button onclick="cetakRekapKategori()" style="width:100%;padding:12px;background:#8B5CF6;color:white;border:none;border-radius:10px;font-size:14px;font-weight:bold;cursor:pointer;margin-bottom:8px;">🖨️ Cetak Rekap</button>
+        <button onclick="document.getElementById('rekapKategoriModal').style.display='none'" style="width:100%;padding:11px;background:#e2e8f0;color:#333;border:none;border-radius:10px;font-size:13px;cursor:pointer;">Batal</button>
+    </div>`;
+    modal.style.display = 'flex';
+}
+
+async function cetakRekapKategori() {
+    const fieldName = document.getElementById('rekapKategoriField')?.value;
+    if(!fieldName) return showToast('Pilih field dulu!');
+    const field = dynamicFieldsJamaah.find(f => f.name === fieldName);
+    if(!field) return showToast('Field tidak ditemukan!');
+
+    // Hitung jumlah per pilihan
+    const counts = {};
+    (field.options || []).forEach(opt => counts[opt] = 0);
+    let kosong = 0;
+    jamaahList.forEach(j => {
+        const val = j.additional_fields?.[fieldName] || '';
+        if(!val) { kosong++; return; }
+        counts[val] = (counts[val] || 0) + 1;
+    });
+
+    const total = jamaahList.length;
+    const cfg = getKonfigurasiProData();
+    const tanggal = new Date().toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' });
+    const namaInstansi = isLicensed() ? (cfg.instansi1?.nama || 'Navara') : 'Navara';
+    const headerHtml = buildPrintHeader(cfg, tanggal);
+    const watermarkHtml = buildPrintWatermark(cfg);
+
+    let rowsHtml = '';
+    Object.keys(counts).forEach(opt => {
+        const jumlah = counts[opt];
+        const persen = total > 0 ? ((jumlah/total)*100).toFixed(1) : 0;
+        rowsHtml += `<tr><td style="padding:10px;border-bottom:1px solid #eee;">${escapeHtml(opt)}</td><td style="padding:10px;border-bottom:1px solid #eee;text-align:center;font-weight:bold;">${jumlah}</td><td style="padding:10px;border-bottom:1px solid #eee;text-align:center;color:#888;">${persen}%</td></tr>`;
+    });
+    if(kosong > 0) {
+        const persenKosong = total > 0 ? ((kosong/total)*100).toFixed(1) : 0;
+        rowsHtml += `<tr><td style="padding:10px;border-bottom:1px solid #eee;color:#999;font-style:italic;">(Belum diisi)</td><td style="padding:10px;border-bottom:1px solid #eee;text-align:center;font-weight:bold;color:#999;">${kosong}</td><td style="padding:10px;border-bottom:1px solid #eee;text-align:center;color:#888;">${persenKosong}%</td></tr>`;
+    }
+
+    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Rekap ${field.label}</title>
+    <style>
+        @page { size: A4 portrait; margin: 10mm 12mm; }
+        * { box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f0f0f0; }
+        .box { background: white; max-width: 800px; margin: 0 auto; border-radius: 16px; padding: 30px; box-shadow: 0 2px 16px rgba(0,0,0,0.1); position: relative; overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+        th { background: #0D5C4A; color: white; padding: 10px; text-align: left; }
+        .total-row { background: #f0fdf4; font-weight: bold; }
+        @media print { body { background: white; padding: 0; } .box { box-shadow: none; border-radius: 0; } .no-print { display: none; } }
+    </style></head><body>
+    <div class="box">
+        ${watermarkHtml}
+        <div style="position:relative;z-index:1;">
+            ${headerHtml}
+            <h2 style="color:#0D5C4A;margin-bottom:4px;">📊 REKAP ${field.label.toUpperCase()}</h2>
+            <div style="color:#888;font-size:12px;margin-bottom:16px;">${namaInstansi} · Total Jamaah: ${total} orang · Dicetak: ${tanggal}</div>
+            <table>
+                <thead><tr><th>${escapeHtml(field.label)}</th><th style="text-align:center;">Jumlah</th><th style="text-align:center;">Persentase</th></tr></thead>
+                <tbody>
+                    ${rowsHtml}
+                    <tr class="total-row"><td style="padding:10px;">TOTAL</td><td style="padding:10px;text-align:center;">${total}</td><td style="padding:10px;text-align:center;">100%</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="no-print" style="text-align:center;margin-top:16px;">
+        <button onclick="window.print()" style="padding:12px 24px;background:#0D5C4A;color:white;border:none;border-radius:10px;font-size:14px;cursor:pointer;">🖨️ CETAK</button>
+        <button onclick="window.close()" style="padding:12px 24px;background:#e2e8f0;color:#333;border:none;border-radius:10px;font-size:14px;cursor:pointer;margin-left:8px;">✕ TUTUP</button>
+    </div>
+    </body></html>`;
+
+    const win = window.open('', '_blank');
+    if(!win) { showToast('Izinkan popup untuk cetak!'); return; }
+    win.document.write(html);
+    injectWatermarkToPrintWin(win);
+    win.document.close();
+    document.getElementById('rekapKategoriModal').style.display = 'none';
+}
+
 function openManageFieldsModal(){ 
     if(!isAdminModePremium) return showToast('Aktifkan Mode Admin dulu!'); 
     renderFieldsList(); 
@@ -6179,7 +6306,8 @@ function renderFieldsList(){
     let html=''; 
     dynamicFieldsJamaah.forEach((f,idx)=>{ 
         const rahasiaLabel = f.rahasia === true ? '<span style="color:#e74c3c;font-size:10px;"> 🔒 Rahasia</span>' : '';
-        html+=`<div class="field-item"><div><strong>${escapeHtml(f.label)}</strong>${rahasiaLabel}<br><small style="font-size:11px;">${f.name} (${f.type})</small></div><div style="display:flex;gap:6px;"><button class="btn-edit-jamaah" onclick="editDynamicFieldJamaah(${idx})" style="padding:4px 10px;font-size:11px;">Edit</button><button class="btn-danger-small" onclick="confirmDeleteDynamicField(${idx})">Hapus</button></div></div>`; 
+        const typeLabel = f.type === 'dropdown' ? `dropdown: ${(f.options||[]).join(', ')}` : f.type;
+        html+=`<div class="field-item"><div><strong>${escapeHtml(f.label)}</strong>${rahasiaLabel}<br><small style="font-size:11px;">${f.name} (${escapeHtml(typeLabel)})</small></div><div style="display:flex;gap:6px;"><button class="btn-edit-jamaah" onclick="editDynamicFieldJamaah(${idx})" style="padding:4px 10px;font-size:11px;">Edit</button><button class="btn-danger-small" onclick="confirmDeleteDynamicField(${idx})">Hapus</button></div></div>`; 
     }); 
     container.innerHTML=html; 
 }
@@ -6196,12 +6324,17 @@ function editDynamicFieldJamaah(idx){
             <h3 style="margin-bottom:16px;">Edit Field Dinamis</h3>
             <div style="margin-bottom:10px;"><label>Label Field</label><input type="text" id="editFieldLabel" value="${escapeHtml(f.label)}" style="width:100%;padding:8px;border-radius:8px;border:1px solid #ddd;margin-top:4px;"></div>
             <div style="margin-bottom:10px;"><label>Tipe Field</label>
-            <select id="editFieldType" style="width:100%;padding:8px;border-radius:8px;border:1px solid #ddd;margin-top:4px;">
+            <select id="editFieldType" onchange="toggleEditDropdownOptions()" style="width:100%;padding:8px;border-radius:8px;border:1px solid #ddd;margin-top:4px;">
                 <option value="text" ${f.type==='text'?'selected':''}>Text</option>
                 <option value="date" ${f.type==='date'?'selected':''}>Tanggal</option>
                 <option value="tel" ${f.type==='tel'?'selected':''}>Telepon</option>
                 <option value="textarea" ${f.type==='textarea'?'selected':''}>Text Area</option>
+                <option value="dropdown" ${f.type==='dropdown'?'selected':''}>Dropdown / Pilihan</option>
             </select></div>
+            <div id="editDropdownOptionsWrap" style="margin-bottom:10px;display:${f.type==='dropdown'?'block':'none'};">
+                <label>Daftar Pilihan (pisahkan dengan koma)</label>
+                <input type="text" id="editFieldOptions" value="${escapeHtml((f.options||[]).join(', '))}" placeholder="Contoh: Tamattu', Ifrad, Qiran" style="width:100%;padding:8px;border-radius:8px;border:1px solid #ddd;margin-top:4px;">
+            </div>
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
                 <input type="checkbox" id="editFieldRahasia" ${f.rahasia===true?'checked':''} style="width:18px;height:18px;">
                 <label style="margin:0;">Sembunyikan di PDF Folder (Rahasia)</label>
@@ -6212,6 +6345,12 @@ function editDynamicFieldJamaah(idx){
     document.body.appendChild(modal);
 }
 
+function toggleEditDropdownOptions() {
+    const type = document.getElementById('editFieldType').value;
+    const wrap = document.getElementById('editDropdownOptionsWrap');
+    if(wrap) wrap.style.display = type === 'dropdown' ? 'block' : 'none';
+}
+
 function saveEditDynamicField(idx){
     const label = document.getElementById('editFieldLabel')?.value.trim();
     const type = document.getElementById('editFieldType')?.value;
@@ -6220,6 +6359,14 @@ function saveEditDynamicField(idx){
     dynamicFieldsJamaah[idx].label = label;
     dynamicFieldsJamaah[idx].type = type;
     dynamicFieldsJamaah[idx].rahasia = rahasia;
+    if(type === 'dropdown') {
+        const optionsRaw = document.getElementById('editFieldOptions')?.value.trim() || '';
+        const options = optionsRaw.split(',').map(o => o.trim()).filter(o => o);
+        if(options.length === 0) return showToast('Isi minimal 1 pilihan untuk dropdown!');
+        dynamicFieldsJamaah[idx].options = options;
+    } else {
+        delete dynamicFieldsJamaah[idx].options;
+    }
     saveDynamicFieldsJamaah();
     renderFieldsList();
     document.getElementById('editFieldModalInline')?.remove();
@@ -6230,11 +6377,20 @@ function openFieldModal(){
     if(!isAdminModePremium) return showToast('Aktifkan Mode Admin dulu!'); 
     document.getElementById('newFieldName').value=''; 
     document.getElementById('newFieldLabel').value=''; 
+    document.getElementById('newFieldType').value='text';
+    document.getElementById('newFieldOptions').value='';
+    document.getElementById('dropdownOptionsWrap').style.display='none';
     document.getElementById('fieldModal').classList.add('show'); 
 }
 
 function closeFieldModal(){ 
     document.getElementById('fieldModal').classList.remove('show'); 
+}
+
+function toggleDropdownOptionsInput() {
+    const type = document.getElementById('newFieldType').value;
+    const wrap = document.getElementById('dropdownOptionsWrap');
+    if(wrap) wrap.style.display = type === 'dropdown' ? 'block' : 'none';
 }
 
 function addDynamicFieldJamaah(){ 
@@ -6245,7 +6401,14 @@ function addDynamicFieldJamaah(){
     if(!label) return showToast('Label harus diisi!'); 
     if(dynamicFieldsJamaah.some(f=>f.name===name)) return showToast('Field sudah ada!'); 
     const rahasia = document.getElementById('newFieldRahasia')?.checked || false;
-    dynamicFieldsJamaah.push({name,label,type,rahasia}); 
+    const newField = {name,label,type,rahasia};
+    if(type === 'dropdown') {
+        const optionsRaw = document.getElementById('newFieldOptions').value.trim();
+        if(!optionsRaw) return showToast('Isi minimal 1 pilihan untuk dropdown!');
+        newField.options = optionsRaw.split(',').map(o => o.trim()).filter(o => o);
+        if(newField.options.length === 0) return showToast('Isi minimal 1 pilihan untuk dropdown!');
+    }
+    dynamicFieldsJamaah.push(newField); 
     saveDynamicFieldsJamaah(); 
     closeFieldModal(); 
     renderFieldsList(); 
