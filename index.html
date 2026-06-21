@@ -8159,19 +8159,15 @@ async function shareInvoiceGambar(jamaahId) {
         canvas.toBlob(async (blob) => {
             const file = new File([blob], 'Invoice_' + jamaah.nama_lengkap.replace(/ /g, '_') + '.png', { type: 'image/png' });
             if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-                try {
-                    await navigator.share({ files: [file], title: 'Invoice - ' + jamaah.nama_lengkap });
-                    return;
-                } catch(shareErr) {
-                    if (shareErr.name === 'AbortError') return;
-                }
+                await navigator.share({ files: [file], title: 'Invoice - ' + jamaah.nama_lengkap });
+            } else {
+                // Fallback download gambar
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = file.name;
+                a.click();
+                showToast('⬇️ Invoice didownload sebagai gambar');
             }
-            // Fallback download gambar
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = file.name;
-            a.click();
-            showToast('⬇️ Invoice didownload sebagai gambar');
         }, 'image/png');
     } catch(e) {
         showToast('❌ Gagal: ' + e.message);
