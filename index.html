@@ -5005,7 +5005,7 @@ function getWatermarkStyle() {
 function injectWatermarkToPrintWin(win) {
     if(!win) return;
     try {
-        // Cek apakah template sudah punya watermark dari buildPrintWatermark (id="wmMark")
+        // Cek apakah sudah pernah dipasang (cegah dobel kalau terpanggil 2x)
         if(win.document.getElementById && win.document.getElementById('wmMark')) return;
 
         const cfg = getKonfigurasiProData();
@@ -5016,30 +5016,58 @@ function injectWatermarkToPrintWin(win) {
             : 'Navara';
         const opacity = cfg.watermark.opacity || 0.15;
         const fontSize = cfg.watermark.fontsize || 60;
-
         const posisi = cfg.watermark?.position || 'diagonal';
-        const transform = posisi === 'center'
-            ? 'translate(-50%, -50%)'
-            : 'translate(-50%, -50%) rotate(-40deg)';
 
-        const div = win.document.createElement('div');
-        div.id = 'wmMark';
-        div.style.cssText = `position:absolute;top:50%;left:50%;transform:${transform};font-size:${fontSize}pt;font-weight:bold;color:rgba(13,92,74,${opacity});pointer-events:none;z-index:9999;white-space:nowrap;`;
-        div.textContent = text;
+        const renderWatermark = () => {
+            if(win.document.getElementById('wmMark')) return; // sudah dipasang, jangan dobel
+            const boxEl = win.document.querySelector('.box') || win.document.body;
+            if(!boxEl) return;
 
-        // Cari .box (kartu dokumen) - kalau ada, tempel watermark DI DALAM .box
-        // supaya selalu pas menutupi kartu, bukan fixed ke seluruh halaman/viewport
-        // (mencegah watermark meleset turun di WebView Android saat halaman kosong panjang)
-        const boxEl = win.document.querySelector('.box');
-        if(boxEl) {
             const computedPos = win.getComputedStyle ? win.getComputedStyle(boxEl).position : '';
             if(!computedPos || computedPos === 'static') boxEl.style.position = 'relative';
             boxEl.style.overflow = boxEl.style.overflow || 'hidden';
-            boxEl.appendChild(div);
-        } else if(win.document.body) {
-            win.document.body.style.position = win.document.body.style.position || 'relative';
-            win.document.body.appendChild(div);
-        }
+
+            // Ukur tinggi ASLI dokumen setelah dirender, supaya tahu kira-kira berapa halaman
+            const boxHeight = boxEl.scrollHeight || boxEl.offsetHeight || 1100;
+            const approxPageHeightPx = 1100; // perkiraan tinggi 1 halaman A4 setelah margin cetak
+            const estimatedPages = Math.max(1, Math.ceil(boxHeight / approxPageHeightPx));
+
+            const wrap = win.document.createElement('div');
+            wrap.id = 'wmMark';
+            wrap.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;overflow:hidden;';
+
+            if(posisi === 'tile') {
+                // Tile rapat - jumlah baris ikut menyesuaikan estimasi jumlah halaman
+                const rowsPerPage = 4;
+                const totalRows = estimatedPages * rowsPerPage;
+                for(let r = 0; r < totalRows; r++) {
+                    const topPct = (r / totalRows) * 100;
+                    for(let c = 0; c < 3; c++) {
+                        const div = win.document.createElement('div');
+                        div.style.cssText = `position:absolute;top:${topPct}%;left:${c*32}%;font-size:${Math.round(fontSize*0.4)}px;font-weight:bold;color:rgba(13,92,74,${opacity});transform:rotate(-30deg);white-space:nowrap;`;
+                        div.textContent = text;
+                        wrap.appendChild(div);
+                    }
+                }
+            } else {
+                // Diagonal / Tengah - diulang 1x per estimasi halaman, merata dari atas ke bawah
+                const transform = posisi === 'center'
+                    ? 'translate(-50%, -50%)'
+                    : 'translate(-50%, -50%) rotate(-40deg)';
+                for(let p = 0; p < estimatedPages; p++) {
+                    const topPct = ((p + 0.5) / estimatedPages) * 100;
+                    const div = win.document.createElement('div');
+                    div.style.cssText = `position:absolute;top:${topPct}%;left:50%;transform:${transform};font-size:${fontSize}pt;font-weight:bold;color:rgba(13,92,74,${opacity});white-space:nowrap;`;
+                    div.textContent = text;
+                    wrap.appendChild(div);
+                }
+            }
+            boxEl.appendChild(wrap);
+        };
+
+        // Beri sedikit jeda supaya konten (tabel, gambar) selesai melayout dulu
+        // sebelum tinggi dokumen diukur - hasilnya lebih akurat untuk dokumen panjang.
+        setTimeout(renderWatermark, 80);
     } catch(e) {}
 }
 
@@ -6081,7 +6109,7 @@ function shareAllJamaahToWA(){
         } 
         text+=`\n`; 
     }); 
-    text+=`\n#Navara`; 
+    text+=`\n#${getKonfigurasiProData().instansi1.nama || 'Navara'}`; 
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`); 
 }
 
@@ -7825,7 +7853,7 @@ function renderPaymentJamaahList() {
         if (needInput) 
             html += `<div class="payment-jamaah-card" style="border-left-color: #f39c12;"><div class="payment-jamaah-info"><h4>${escapeHtml(j.nama_lengkap)}</h4><div class="payment-price-detail" style="color: #f39c12;">⚠️ Total Harga Paket belum diisi!</div></div><div><button class="payment-btn-bayar" onclick="openEditHargaModal('${j.id}')" style="background:#f39c12; color:white;"><i class="fas fa-tag"></i> Atur Harga</button></div></div>`; 
         else 
-            html += `<div class="payment-jamaah-card" style="border-left-color: ${warna};"><div class="payment-jamaah-info"><h4>${escapeHtml(j.nama_lengkap)}</h4><div class="payment-price-detail">💰 Total Paket: ${formatRupiah(totalHargaPaket)}<br>💸 Dibayar: ${formatRupiah(totalBayar)}</div></div><div style="text-align: right;"><div class="payment-sisa-badge" style="color: ${warna}; margin-bottom: 8px;">${status === 'LUNAS' ? '✅ LUNAS' : '💵 Sisa ' + formatRupiah(sisa)}</div><div><button class="payment-btn-bayar" onclick="openPaymentModalWithJamaah('${j.id}')"><i class="fas fa-plus-circle"></i> Bayar</button><button class="payment-btn-bayar" onclick="prepareInvoice('${j.id}')"><i class="fas fa-file-invoice"></i> WA</button><button class="payment-btn-bayar" onclick="previewInvoicePDF('${j.id}')"><i class="fas fa-eye"></i> Preview</button><button class="payment-btn-bayar" onclick="cetakInvoiceAuto('${j.id}')"><i class="fas fa-print"></i> Cetak</button><button class="payment-btn-bayar" onclick="openEditHargaModal('${j.id}')"><i class="fas fa-edit"></i> Harga</button><button class="payment-btn-bayar" onclick="openRiwayatModal('${j.id}')"><i class="fas fa-history"></i> Riwayat</button></div></div></div>`; 
+            html += `<div class="payment-jamaah-card" style="border-left-color: ${warna};"><div class="payment-jamaah-info"><h4>${escapeHtml(j.nama_lengkap)}</h4><div class="payment-price-detail">💰 Total Paket: ${formatRupiah(totalHargaPaket)}<br>💸 Dibayar: ${formatRupiah(totalBayar)}</div></div><div style="text-align: right;"><div class="payment-sisa-badge" style="color: ${warna}; margin-bottom: 8px;">${status === 'LUNAS' ? '✅ LUNAS' : '💵 Sisa ' + formatRupiah(sisa)}</div><div><button class="payment-btn-bayar" onclick="openPaymentModalWithJamaah('${j.id}')"><i class="fas fa-plus-circle"></i> Bayar</button><button class="payment-btn-bayar" onclick="prepareInvoice('${j.id}')"><i class="fas fa-file-invoice"></i> WA</button><button class="payment-btn-bayar" onclick="shareInvoiceGambar('${j.id}')"><i class="fas fa-share-alt"></i> Share</button><button class="payment-btn-bayar" onclick="cetakInvoiceAuto('${j.id}')"><i class="fas fa-print"></i> Cetak</button><button class="payment-btn-bayar" onclick="openEditHargaModal('${j.id}')"><i class="fas fa-edit"></i> Harga</button><button class="payment-btn-bayar" onclick="openRiwayatModal('${j.id}')"><i class="fas fa-history"></i> Riwayat</button></div></div></div>`; 
     }); 
     if (filteredJamaah.length === 0) html = '<div style="text-align:center; padding:20px; color:#94a3b8;">Tidak ada jamaah yang sesuai dengan filter.</div>'; 
     container.innerHTML = html; 
@@ -8074,6 +8102,81 @@ async function generateInvoicePDFDoc(jamaahId) {
     doc.line(150, y + 1, 150 + ttdWidth, y + 1);
     
     return { doc, jamaah };
+}
+
+async function shareInvoiceGambar(jamaahId) {
+    const jamaah = jamaahList.find(j => j.id == jamaahId);
+    if (!jamaah) return showToast('Data jamaah tidak ditemukan');
+    showToast('⏳ Menyiapkan gambar invoice...');
+    try {
+        const cfg = getKonfigurasiProData();
+        const transaksiList = paymentTransaksiList.filter(t => t.id_jamaah == jamaahId).sort((a,b) => new Date(a.tanggal) - new Date(b.tanggal));
+        const totalBayar = hitungTotalBayarJamaah(jamaahId);
+        const totalHargaPaket = getTotalHargaPaket(jamaah) || 0;
+        const sisa = totalHargaPaket - totalBayar;
+        const lunas = sisa <= 0;
+        const statusColor = lunas ? '#10B981' : '#EF4444';
+        const prefix = cfg.settings?.invoice_prefix || 'INV/NAVARA';
+        const tglCetak = new Date().toLocaleDateString('id-ID', {day:'2-digit', month:'long', year:'numeric'});
+        const noInvoice = `${prefix}/${jamaah.id}/${new Date().toLocaleDateString('id-ID').replace(/\//g,'')}`;
+        const namaInstansi = cfg.instansi1?.nama || 'Navara';
+
+        let rowsHtml = '';
+        transaksiList.forEach((t,i) => {
+            rowsHtml += `<tr><td style="padding:8px;border-bottom:1px solid #eee;text-align:center;">${i+1}</td><td style="padding:8px;border-bottom:1px solid #eee;">${t.tanggal}</td><td style="padding:8px;border-bottom:1px solid #eee;">${t.keterangan||'-'}</td><td style="padding:8px;border-bottom:1px solid #eee;text-align:right;">${formatRupiah(t.nominal)}</td></tr>`;
+        });
+        if(!transaksiList.length) rowsHtml = `<tr><td colspan="4" style="padding:12px;text-align:center;color:#999;">Belum ada transaksi</td></tr>`;
+
+        const div = document.createElement('div');
+        div.style.cssText = 'position:fixed;left:-9999px;top:0;width:700px;background:white;font-family:Arial,sans-serif;';
+        div.innerHTML = `
+        <div style="padding:30px;">
+            <div style="background:#0D5C4A;color:white;padding:18px 22px;border-radius:12px;margin-bottom:20px;text-align:left;">
+                <div style="font-weight:bold;font-size:18px;">${escapeHtml(namaInstansi)}</div>
+                <div style="font-size:12px;opacity:0.9;">${escapeHtml(cfg.instansi1?.alamat || '')}</div>
+            </div>
+            <h2 style="color:#0D5C4A;text-align:center;margin-bottom:4px;">INVOICE PEMBAYARAN</h2>
+            <div style="text-align:center;color:#888;font-size:12px;margin-bottom:20px;">No: ${noInvoice}</div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:20px;font-size:13px;line-height:2;">
+                <div><strong>Nama Jamaah</strong><br>${escapeHtml(jamaah.nama_lengkap)}</div>
+                <div style="text-align:right;"><strong>Total Paket</strong><br>${formatRupiah(totalHargaPaket)}</div>
+            </div>
+            <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:20px;">
+                <thead><tr><th style="background:#0D5C4A;color:white;padding:10px 8px;text-align:center;width:36px;">No</th><th style="background:#0D5C4A;color:white;padding:10px 8px;text-align:left;">Tanggal</th><th style="background:#0D5C4A;color:white;padding:10px 8px;text-align:left;">Keterangan</th><th style="background:#0D5C4A;color:white;padding:10px 8px;text-align:right;">Nominal</th></tr></thead>
+                <tbody>${rowsHtml}</tbody>
+            </table>
+            <div style="background:#f8f8f8;border-radius:10px;padding:14px;font-size:13px;line-height:2.2;">
+                <div style="display:flex;justify-content:space-between;"><span>Total Dibayar</span><strong>${formatRupiah(totalBayar)}</strong></div>
+                <div style="display:flex;justify-content:space-between;"><span>Sisa Tagihan</span><strong>${formatRupiah(sisa > 0 ? sisa : 0)}</strong></div>
+                <div style="font-size:16px;font-weight:bold;color:${statusColor};margin-top:8px;text-align:center;">${lunas ? '✅ LUNAS' : '⚠️ BELUM LUNAS'}</div>
+            </div>
+            <div style="text-align:center;color:#aaa;font-size:11px;margin-top:20px;">Dicetak: ${tglCetak}</div>
+        </div>`;
+        document.body.appendChild(div);
+
+        const canvas = await html2canvas(div, { scale: 2, backgroundColor: '#ffffff', useCORS: true });
+        document.body.removeChild(div);
+        canvas.toBlob(async (blob) => {
+            const file = new File([blob], 'Invoice_' + jamaah.nama_lengkap.replace(/ /g, '_') + '.png', { type: 'image/png' });
+            if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+                try {
+                    await navigator.share({ files: [file], title: 'Invoice - ' + jamaah.nama_lengkap });
+                    return;
+                } catch(shareErr) {
+                    if (shareErr.name === 'AbortError') return;
+                }
+            }
+            // Fallback download gambar
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = file.name;
+            a.click();
+            showToast('⬇️ Invoice didownload sebagai gambar');
+        }, 'image/png');
+    } catch(e) {
+        showToast('❌ Gagal: ' + e.message);
+        console.error(e);
+    }
 }
 
 async function previewInvoicePDF(jamaahId) {
@@ -10383,7 +10486,7 @@ function cetakLabel() {
         if(j) { 
             const jk = jamaahKitaList.find(jk => jk.jamaahId == j.id); 
             const cfg = getKonfigurasiProData(); 
-            const logo = cfg.instansi1.logo ? `<img src="${cfg.instansi1.logo}" style="height:30px; margin-bottom:8px;">` : '✨ Navara'; 
+            const logo = cfg.instansi1.logo ? `<img src="${cfg.instansi1.logo}" style="height:30px; margin-bottom:8px;">` : `✨ ${cfg.instansi1.nama || 'Navara'}`; 
             
             // Build field lines dynamically
             let fieldLines = '';
@@ -10735,29 +10838,12 @@ function buildPrintHeader(cfg, tanggal) {
 }
 
 function buildPrintWatermark(cfg) {
-    if (!cfg.watermark || !cfg.watermark.enabled) return '';
-    const text = cfg.watermark.text || cfg.instansi1?.nama || 'Navara';
-    const opacity = cfg.watermark.opacity || 0.15;
-    const fontSize = cfg.watermark.fontsize || 60;
-    const posisi = cfg.watermark.position || 'diagonal';
-
-    if(posisi === 'tile') {
-        let tiles = '';
-        for(let r=0; r<7; r++) {
-            for(let c=0; c<4; c++) {
-                tiles += `<div style="position:absolute;top:${r*15}%;left:${c*28}%;font-size:${Math.round(fontSize*0.4)}px;font-weight:bold;color:rgba(13,92,74,${opacity});transform:rotate(-30deg);white-space:nowrap;pointer-events:none;">${text}</div>`;
-            }
-        }
-        return `<div id="wmMark" style="position:absolute;top:0;left:0;width:100%;height:100%;overflow:hidden;pointer-events:none;z-index:9999;">${tiles}</div>`;
-    }
-
-    const transform = posisi === 'center'
-        ? 'translate(-50%, -50%)'
-        : 'translate(-50%, -50%) rotate(-40deg)';
-
-    // position:absolute relatif ke .box (bukan fixed ke viewport) - supaya watermark selalu pas
-    // menutupi kartu dokumen, tidak meleset karena halaman kosong di bawah (bug WebView Android)
-    return `<div id="wmMark" style="position:absolute;top:50%;left:50%;transform:${transform};font-size:${fontSize}pt;font-weight:bold;color:rgba(13,92,74,${opacity});pointer-events:none;z-index:9999;white-space:nowrap;">${text}</div>`;
+    // Watermark sekarang di-generate SECARA DINAMIS oleh injectWatermarkToPrintWin()
+    // setelah dokumen selesai dirender, supaya jumlah pengulangan menyesuaikan
+    // panjang dokumen (laporan banyak halaman tetap kebagian watermark di tiap halaman).
+    // Fungsi ini disisakan kosong agar pemanggil lama (yang masih sisipkan ${watermarkHtml})
+    // tidak error, tapi tidak lagi merender apapun di sini.
+    return '';
 }
 
 function buildPrintTandaTangan(cfg, tglCetak) {
