@@ -2146,17 +2146,6 @@
     </div>
 </div>
 
-<div id="jamaahKitaEditModal" class="jamaahkita-modal">
-    <div class="jamaahkita-modal-content">
-        <h3 id="jamaahKitaEditModalTitle">✏️ Edit Data Jamaah</h3>
-        <div id="jamaahKitaEditFormContainer"></div>
-        <div class="row" style="margin-top:16px;">
-            <button onclick="closeJamaahKitaEditModal()" style="background:#ccc; color:#333;">Batal</button>
-            <button onclick="saveEditJamaahKita()" style="background:var(--primary);">Simpan</button>
-        </div>
-    </div>
-</div>
-
 <div id="jamaahKitaBatchBar" class="batch-floating-bar">
     <span id="jamaahKitaSelectedCount">0 dipilih</span>
     <button class="btn-batch-wa" onclick="sendBatchWA()"><i class="fab fa-whatsapp"></i> WA Massal</button>
@@ -6820,7 +6809,6 @@ function renderJamaahKitaList() {
             <div class="jamaah-kita-info">
                 <div class="jamaah-kita-nama">👤 ${escapeHtml(jk.nama_lengkap)}
                     <div class="jamaah-kita-actions">
-                        <button onclick="openJamaahKitaEditModal(${jk.id})" style="background:#3B82F6;">✏️ Edit</button>
                         <button onclick="confirmDeleteJamaahKitaById(${jk.id})" style="background:#ef4444;">🗑️ Hapus</button>
                     </div>
                 </div>
@@ -7030,42 +7018,6 @@ function sendBatchWA() {
     msg += `━━━━━━━━━━━━━━━━━━\n_${getKonfigurasiProData().instansi1.nama || 'Navara'}_`;
     window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
     clearJamaahKitaSelection();
-}
-
-function openJamaahKitaEditModal(id) {
-    const jk = jamaahKitaList.find(j => j.id === id);
-    if (!jk) return;
-    editingJamaahKitaId = id;
-    document.getElementById('jamaahKitaEditModalTitle').innerHTML = `✏️ Edit Data - ${escapeHtml(jk.nama_lengkap)}`;
-    let formHtml = "";
-    dynamicFieldsJamaahKita.forEach(field => {
-        const currentValue = jk.additional_fields?.[field.name] || "";
-        formHtml += `<div class="jamaahkita-edit-field"><label>${field.icon || '📌'} ${escapeHtml(field.label)}</label><input type="${field.type === 'tel' ? 'tel' : 'text'}" id="editJamaahKita_${field.name}" value="${escapeHtml(currentValue)}"></div>`;
-    });
-    document.getElementById('jamaahKitaEditFormContainer').innerHTML = formHtml;
-    document.getElementById('jamaahKitaEditModal').classList.add('show');
-}
-
-function closeJamaahKitaEditModal() {
-    document.getElementById('jamaahKitaEditModal').classList.remove('show');
-    editingJamaahKitaId = null;
-}
-
-function saveEditJamaahKita() {
-    if (!editingJamaahKitaId) return;
-    const jkIndex = jamaahKitaList.findIndex(j => j.id === editingJamaahKitaId);
-    if (jkIndex === -1) return;
-    const updatedFields = {};
-    dynamicFieldsJamaahKita.forEach(field => {
-        const input = document.getElementById(`editJamaahKita_${field.name}`);
-        if (input) updatedFields[field.name] = input.value.trim();
-    });
-    jamaahKitaList[jkIndex].additional_fields = updatedFields;
-    jamaahKitaList[jkIndex].updated_at = new Date().toLocaleDateString('id-ID');
-    saveJamaahKitaData();
-    renderJamaahKitaList();
-    closeJamaahKitaEditModal();
-    showToast('Data berhasil diupdate!');
 }
 
 function confirmDeleteJamaahKitaById(id) {
@@ -7535,7 +7487,6 @@ function confirmDeleteAllJamaahKita() {
 
 function printGroupedPDF() { showGroupDialogJamaahKita(); }
 
-function editJamaahKita(index) { const jk = jamaahKitaList[index]; if (jk) openJamaahKitaEditModal(jk.id); }
 function confirmDeleteJamaahKita(index) { const jk = jamaahKitaList[index]; if (jk) confirmDeleteJamaahKitaById(jk.id); }
 
 
