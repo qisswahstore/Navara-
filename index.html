@@ -7824,7 +7824,6 @@ async function shareInvoiceGambar(jamaahId) {
         const tglCetak = new Date().toLocaleDateString('id-ID', {day:'2-digit', month:'long', year:'numeric'});
         const noInvoice = `${prefix}/${jamaah.id}/${new Date().toLocaleDateString('id-ID').replace(/\//g,'')}`;
 
-        // Reuse buildPrintHeader → logo otomatis masuk dari Konfigurasi
         const headerHtml = buildPrintHeader(cfg, tglCetak);
         const watermarkHtml = buildPrintWatermark(cfg);
         const qrHtml = await buildPrintQR(cfg, `Invoice:${noInvoice}\nJamaah:${jamaah.nama_lengkap}\nStatus:${lunas?'LUNAS':'BELUM LUNAS'}`);
@@ -7835,7 +7834,6 @@ async function shareInvoiceGambar(jamaahId) {
         });
         if(!transaksiList.length) rowsHtml = `<tr><td colspan="5" style="padding:12px;text-align:center;color:#999;">Belum ada transaksi</td></tr>`;
 
-        // Render off-screen dengan HTML yang SAMA dengan cetakInvoiceAuto
         const div = document.createElement('div');
         div.style.cssText = 'position:fixed;left:-9999px;top:0;width:700px;background:white;font-family:Arial,sans-serif;';
         div.innerHTML = `
@@ -7873,7 +7871,28 @@ async function shareInvoiceGambar(jamaahId) {
         </div>`;
         document.body.appendChild(div);
 
-        const canvas = await html2canvas(div, { scale: 2, backgroundColor: '#ffffff', useCORS: true, allowTaint: true });
+        // ── PERBAIKAN LOGO: Tunggu semua gambar selesai load dulu ──────────────
+        const images = div.querySelectorAll('img');
+        await Promise.all([...images].map(img =>
+            img.complete ? Promise.resolve() :
+            new Promise(resolve => {
+                img.onload = resolve;
+                img.onerror = resolve; // Tetap lanjut meski logo gagal load
+                setTimeout(resolve, 3000); // Max tunggu 3 detik
+            })
+        ));
+
+        // Beri sedikit waktu tambahan agar browser selesai render
+        await new Promise(r => setTimeout(r, 150));
+
+        const canvas = await html2canvas(div, {
+            scale: 2,
+            backgroundColor: '#ffffff',
+            useCORS: true,
+            allowTaint: true,     // ← fix utama untuk logo base64
+            imageTimeout: 0,      // ← tidak ada timeout untuk gambar
+            logging: false
+        });
         document.body.removeChild(div);
 
         canvas.toBlob(async (blob) => {
