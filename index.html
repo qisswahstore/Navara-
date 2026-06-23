@@ -2154,7 +2154,18 @@
 <!-- CATATAN PAGE -->
 <div id="page-catatan" class="page">
     <div class="header-premium header-premium-small"><div class="back-header"><i class="fas fa-arrow-left" onclick="showPage('home')"></i><h2>Catatan</h2><i class="fas fa-plus" onclick="openTambahCatatan()" style="color:white; font-size:20px; cursor:pointer;"></i></div></div>
-    <div class="container" id="catatanListContainer"></div>
+    <div class="container">
+        <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center;">
+            <input type="text" id="catatanSearch" placeholder="🔍 Cari catatan..." oninput="renderCatatanList()"
+                style="flex:1;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:20px;font-size:14px;outline:none;">
+            <select id="catatanFilter" onchange="renderCatatanList()"
+                style="padding:10px;border:1.5px solid #e2e8f0;border-radius:20px;font-size:13px;background:white;outline:none;">
+                <option value="semua">Semua</option>
+                <option value="pin">📌 Pinned</option>
+            </select>
+        </div>
+        <div id="catatanListContainer"></div>
+    </div>
 </div>
 
 <!-- ZAKAT PAGE -->
@@ -2844,10 +2855,35 @@
 <div id="masterItemModal" class="modal"><div class="modal-content"><h3>Kelola Daftar Item</h3><div class="row"><div class="input-group"><label>Nama Item</label><input type="text" id="masterNewItem" placeholder="Contoh: Kain Ihram"></div><button class="btn-small" onclick="addMasterItem()" style="background:var(--primary); color:white; padding:0 15px;">+ Tambah</button></div><div id="masterItemList" style="margin-top:15px;"></div><button class="btn btn-danger mt-2" onclick="closeMasterItemModal()">TUTUP</button></div></div>
 <div id="copyModal" class="modal"><div class="modal-content"><h3>📋 Copy dari Database</h3><p style="font-size:14px;color:#333;margin:10px 0;">Semua jamaah dari database akan disalin ke Multi Event.</p><p style="font-size:12px;color:#0D5C4A;background:#f0fdf4;padding:10px;border-radius:8px;margin:10px 0;">✅ Nama yang sudah ada tidak akan dobel — otomatis dilewati.</p><div class="row"><button class="btn btn-danger" onclick="closeCopyModal()" style="flex:1">BATAL</button><button class="btn btn-primary" onclick="executeCopyFromJamaah()" style="flex:1">COPY SEKARANG</button></div></div></div>
 <div id="modeManagerModal" class="modal"><div class="modal-content"><h3><i class="fas fa-sliders-h"></i> Kelola Mode Switcher</h3><p style="font-size:12px; color:#666; margin-bottom:15px;">Centang mode yang ingin ditampilkan.</p><div id="modeManagerList" style="margin-bottom:20px;"></div><div class="row"><div class="input-group" style="flex:3"><input type="text" id="newModeName" placeholder="Nama mode baru (contoh: Wisata)"></div><button class="btn-small" onclick="addNewMode()" style="background:var(--primary); color:white; padding:0 15px;">+ TAMBAH</button></div><div class="row" style="margin-top:15px;"><button class="btn btn-danger" onclick="closeModeManager()" style="flex:1">BATAL</button><button class="btn btn-primary" onclick="saveModes()" style="flex:1"> SIMPAN PERUBAHAN</button></div></div></div>
-<div id="entryModal" class="modal"><div class="modal-content"><h3 id="entryModalTitle">Tambah Catatan</h3><div class="input-group"><label>Judul</label><input type="text" id="entryJudul" placeholder="Judul catatan..."></div><div class="input-group"><label>Isi</label><textarea id="entryIsi" rows="8" placeholder="Tulis catatan di sini..."></textarea></div><button class="btn btn-primary" onclick="saveCatatanEntry()"> SIMPAN</button><button class="btn btn-danger mt-2" onclick="closeEntryModal()">BATAL</button></div></div>
+<div id="entryModal" class="modal"><div class="modal-content">
+    <h3 id="entryModalTitle">Tambah Catatan</h3>
+    <div class="input-group">
+        <label>Judul <span style="color:#999;font-size:11px;">(opsional)</span></label>
+        <input type="text" id="entryJudul" placeholder="Judul catatan...">
+    </div>
+    <div class="input-group" style="margin-bottom:12px;">
+        <label>Warna Label</label>
+        <div style="display:flex;gap:10px;margin-top:6px;">
+            <span id="colorOpt_default" onclick="pilihWarnaCatatan('default')" style="width:28px;height:28px;border-radius:50%;background:#0D5C4A;cursor:pointer;border:3px solid #333;display:inline-block;"></span>
+            <span id="colorOpt_merah"   onclick="pilihWarnaCatatan('merah')"   style="width:28px;height:28px;border-radius:50%;background:#EF4444;cursor:pointer;display:inline-block;"></span>
+            <span id="colorOpt_kuning"  onclick="pilihWarnaCatatan('kuning')"  style="width:28px;height:28px;border-radius:50%;background:#F59E0B;cursor:pointer;display:inline-block;"></span>
+            <span id="colorOpt_biru"    onclick="pilihWarnaCatatan('biru')"    style="width:28px;height:28px;border-radius:50%;background:#3B82F6;cursor:pointer;display:inline-block;"></span>
+            <span id="colorOpt_ungu"    onclick="pilihWarnaCatatan('ungu')"    style="width:28px;height:28px;border-radius:50%;background:#8B5CF6;cursor:pointer;display:inline-block;"></span>
+        </div>
+        <input type="hidden" id="entryWarna" value="default">
+    </div>
+    <div class="input-group">
+        <label>Isi Catatan</label>
+        <textarea id="entryIsi" rows="12" placeholder="Tulis catatan di sini..." style="resize:vertical;min-height:180px;"></textarea>
+    </div>
+    <div style="display:flex;gap:8px;">
+        <button class="btn btn-primary" style="flex:1;" onclick="saveCatatanEntry()">💾 SIMPAN</button>
+        <button class="btn" style="flex:1;background:#e2e8f0;color:#333;" onclick="closeEntryModal()">Batal</button>
+    </div>
+</div></div>
 <div id="detailModal" class="modal"><div class="modal-content"><h3 id="detailJudul"></h3><div id="detailIsi" style="margin:15px 0; white-space:pre-wrap;"></div><button class="btn btn-wa" onclick="shareDetailToWA()"> KIRIM KE WA</button><button class="btn btn-danger mt-2" onclick="closeDetailModal()">TUTUP</button></div></div>
 <div id="dokumenFieldModal" class="modal"><div class="modal-content"><h3>Tambah Jenis Dokumen</h3><div class="dynamic-field"><label>Nama Dokumen</label><input type="text" id="newDokumenName" placeholder="Contoh: Visa, Tiket, Sertifikat"></div><div class="dynamic-field"><label>Icon</label><select id="newDokumenIcon"><option value="🪪"> KTP</option><option value="📘"> Paspor</option><option value="📷"> Foto</option><option value="💉"> Vaksin</option><option value="🛂"> Visa</option><option value="🎫"> Tiket</option><option value="📄"> Dokumen</option></select></div><button class="btn btn-primary" onclick="addDokumenField()"> TAMBAH</button><button class="btn btn-danger mt-2" onclick="closeDokumenFieldModal()">BATAL</button></div></div>
-<div id="previewDokumenModal" class="modal"><div class="modal-content"><h3 id="previewDokumenTitle">Preview Dokumen</h3><img id="previewDokumenImage" class="preview-img" style="max-width:100%; border-radius:16px; margin:15px 0;"><button class="btn btn-primary" onclick="closePreviewDokumenModal()">Tutup</button></div></div>
+<div id="previewDokumenModal" class="modal"><div class="modal-content"><h3 id="previewDokumenTitle">Preview Dokumen</h3><img id="previewDokumenImage" class="preview-img" style="max-width:100%; border-radius:16px; margin:15px 0;"><div style="display:flex;gap:10px;margin-top:8px;"><button class="btn btn-primary" style="flex:1;" onclick="bukaDocPenuh()">🔍 Buka Penuh</button><button class="btn" style="flex:1;background:#e2e8f0;color:#333;" onclick="closePreviewDokumenModal()">Tutup</button></div></div></div>
 <div id="batchFloatingBar" class="batch-floating-bar" style="position:fixed; bottom:80px; left:50%; transform:translateX(-50%); background:white; padding:12px 20px; border-radius:50px; box-shadow:0 4px 15px rgba(0,0,0,0.2); display:none; align-items:center; gap:10px; border:2px solid #0D5C4A; z-index:9999;">
     <span id="batchCount" class="batch-count">0 dipilih</span>
     <button onclick="showPindahModeModal()" style="background:#0D5C4A;color:white;border:none;padding:8px 14px;border-radius:30px;font-size:12px;cursor:pointer;">🔀 Pindah Mode</button>
@@ -7810,106 +7846,101 @@ function copyInvoiceText() {
 async function shareInvoiceGambar(jamaahId) {
     const jamaah = jamaahList.find(j => j.id == jamaahId);
     if (!jamaah) return showToast('Data jamaah tidak ditemukan');
-    showToast('⏳ Menyiapkan invoice...');
+    showToast('⏳ Membuat PDF invoice...');
     try {
         const cfg = getKonfigurasiProData();
-        const transaksiList = paymentTransaksiList.filter(t => t.id_jamaah == jamaahId)
+        const transaksiList = paymentTransaksiList
+            .filter(t => t.id_jamaah == jamaahId)
             .sort((a,b) => new Date(a.tanggal) - new Date(b.tanggal));
         const totalBayar = hitungTotalBayarJamaah(jamaahId);
         const totalHargaPaket = getTotalHargaPaket(jamaah) || 0;
         const sisa = totalHargaPaket - totalBayar;
         const lunas = sisa <= 0;
-        const statusColor = lunas ? '#10B981' : '#EF4444';
         const prefix = cfg.settings?.invoice_prefix || 'INV/NAVARA';
         const tglCetak = new Date().toLocaleDateString('id-ID', {day:'2-digit', month:'long', year:'numeric'});
         const noInvoice = `${prefix}/${jamaah.id}/${new Date().toLocaleDateString('id-ID').replace(/\//g,'')}`;
+        const namaFile = `Invoice_${jamaah.nama_lengkap.replace(/ /g,'_')}.pdf`;
 
-        const headerHtml = buildPrintHeader(cfg, tglCetak);
-        const watermarkHtml = buildPrintWatermark(cfg);
-        const qrHtml = await buildPrintQR(cfg, `Invoice:${noInvoice}\nJamaah:${jamaah.nama_lengkap}\nStatus:${lunas?'LUNAS':'BELUM LUNAS'}`);
+        // ── Generate jsPDF ────────────────────────────────────────────────────
+        const {jsPDF} = window.jspdf;
+        const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
-        let rowsHtml = '';
-        transaksiList.forEach((t,i) => {
-            rowsHtml += `<tr><td style="padding:8px;border-bottom:1px solid #eee;text-align:center;">${i+1}</td><td style="padding:8px;border-bottom:1px solid #eee;">${t.tanggal}</td><td style="padding:8px;border-bottom:1px solid #eee;">${t.keterangan||'-'}</td><td style="padding:8px;border-bottom:1px solid #eee;">${t.metode||'-'}</td><td style="padding:8px;border-bottom:1px solid #eee;text-align:right;">${formatRupiah(t.nominal)}</td></tr>`;
+        // Header instansi + logo (pakai applyPDFConfig yang sudah teruji)
+        await applyPDFConfig(doc, { landscape: false });
+
+        // Judul invoice
+        let y = 58;
+        doc.setFontSize(14); doc.setFont('helvetica','bold'); doc.setTextColor(26,93,74);
+        doc.text('INVOICE PEMBAYARAN', 105, y, { align: 'center' });
+        y += 6;
+        doc.setFontSize(8); doc.setFont('helvetica','normal'); doc.setTextColor(120,120,120);
+        doc.text(`No: ${noInvoice}`, 105, y, { align: 'center' });
+        y += 8;
+
+        // Info jamaah
+        doc.setFontSize(10); doc.setTextColor(50,50,50); doc.setFont('helvetica','bold');
+        doc.text('Nama Jamaah:', 14, y);
+        doc.setFont('helvetica','normal');
+        doc.text(jamaah.nama_lengkap, 50, y);
+        doc.setFont('helvetica','bold');
+        doc.text('Total Paket:', 140, y);
+        doc.setFont('helvetica','normal');
+        doc.text(formatRupiah(totalHargaPaket), 168, y);
+        y += 10;
+
+        // Tabel transaksi
+        const tableData = transaksiList.map((t,i) => [
+            i+1, t.tanggal, t.keterangan||'-', t.metode||'-', formatRupiah(t.nominal)
+        ]);
+        if(!tableData.length) tableData.push(['-','-','Belum ada transaksi','-','-']);
+
+        doc.autoTable({
+            startY: y,
+            head: [['No','Tanggal','Keterangan','Metode','Nominal']],
+            body: tableData,
+            theme: 'striped',
+            headStyles: { fillColor: [26,93,74], fontSize: 9 },
+            styles: { fontSize: 9, lineWidth: 0.1 },
+            columnStyles: { 0:{cellWidth:10,halign:'center'}, 4:{halign:'right'} }
         });
-        if(!transaksiList.length) rowsHtml = `<tr><td colspan="5" style="padding:12px;text-align:center;color:#999;">Belum ada transaksi</td></tr>`;
 
-        const div = document.createElement('div');
-        div.style.cssText = 'position:fixed;left:-9999px;top:0;width:700px;background:white;font-family:Arial,sans-serif;';
-        div.innerHTML = `
-        <div style="padding:30px;position:relative;overflow:hidden;">
-            ${watermarkHtml}
-            <div style="position:relative;z-index:1;">
-                ${headerHtml}
-                <h2 style="color:#0D5C4A;font-size:20px;text-align:center;margin-bottom:4px;">INVOICE PEMBAYARAN</h2>
-                <div style="text-align:center;color:#888;font-size:12px;margin-bottom:20px;">No: ${noInvoice}</div>
-                <div style="display:flex;justify-content:space-between;margin-bottom:20px;font-size:13px;line-height:2;">
-                    <div><strong>Nama Jamaah</strong><br>${escapeHtml(jamaah.nama_lengkap)}</div>
-                    <div style="text-align:right;"><strong>Total Paket</strong><br>${formatRupiah(totalHargaPaket)}</div>
-                </div>
-                <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:20px;">
-                    <thead><tr>
-                        <th style="background:#0D5C4A;color:white;padding:8px;text-align:center;width:30px;">No</th>
-                        <th style="background:#0D5C4A;color:white;padding:8px;">Tanggal</th>
-                        <th style="background:#0D5C4A;color:white;padding:8px;">Keterangan</th>
-                        <th style="background:#0D5C4A;color:white;padding:8px;">Metode</th>
-                        <th style="background:#0D5C4A;color:white;padding:8px;text-align:right;">Nominal</th>
-                    </tr></thead>
-                    <tbody>${rowsHtml}</tbody>
-                </table>
-                <div style="background:#f8f8f8;border-radius:10px;padding:14px;font-size:13px;line-height:2.2;">
-                    <div style="display:flex;justify-content:space-between;"><span>Total Paket</span><strong>${formatRupiah(totalHargaPaket)}</strong></div>
-                    <div style="display:flex;justify-content:space-between;"><span>Total Dibayar</span><strong>${formatRupiah(totalBayar)}</strong></div>
-                    <div style="display:flex;justify-content:space-between;"><span>Sisa Tagihan</span><strong>${formatRupiah(sisa>0?sisa:0)}</strong></div>
-                    <div style="font-size:16px;font-weight:bold;color:${statusColor};margin-top:8px;text-align:center;">${lunas?'✅ LUNAS':'⚠️ BELUM LUNAS'}</div>
-                </div>
-                <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:20px;">
-                    <div style="color:#aaa;font-size:11px;">Dicetak: ${tglCetak}</div>
-                    ${qrHtml}
-                </div>
-            </div>
-        </div>`;
-        document.body.appendChild(div);
+        y = doc.lastAutoTable.finalY + 8;
 
-        // ── PERBAIKAN LOGO: Tunggu semua gambar selesai load dulu ──────────────
-        const images = div.querySelectorAll('img');
-        await Promise.all([...images].map(img =>
-            img.complete ? Promise.resolve() :
-            new Promise(resolve => {
-                img.onload = resolve;
-                img.onerror = resolve; // Tetap lanjut meski logo gagal load
-                setTimeout(resolve, 3000); // Max tunggu 3 detik
-            })
-        ));
+        // Summary box
+        doc.setDrawColor(220,220,220); doc.setFillColor(248,248,248);
+        doc.roundedRect(14, y, 182, 30, 3, 3, 'FD');
+        y += 8;
+        doc.setFontSize(10); doc.setTextColor(50,50,50);
+        doc.text('Total Paket:', 20, y); doc.setFont('helvetica','bold'); doc.text(formatRupiah(totalHargaPaket), 190, y, {align:'right'});
+        doc.setFont('helvetica','normal'); y += 7;
+        doc.text('Total Dibayar:', 20, y); doc.setFont('helvetica','bold'); doc.text(formatRupiah(totalBayar), 190, y, {align:'right'});
+        doc.setFont('helvetica','normal'); y += 7;
+        doc.text('Sisa Tagihan:', 20, y); doc.setFont('helvetica','bold'); doc.text(formatRupiah(sisa>0?sisa:0), 190, y, {align:'right'});
+        y += 10;
 
-        // Beri sedikit waktu tambahan agar browser selesai render
-        await new Promise(r => setTimeout(r, 150));
+        // Status lunas
+        doc.setFontSize(13); doc.setFont('helvetica','bold');
+        doc.setTextColor(lunas ? 16 : 220, lunas ? 185 : 38, lunas ? 129 : 38);
+        doc.text(lunas ? '✓ LUNAS' : '⚠ BELUM LUNAS', 105, y, { align: 'center' });
 
-        const canvas = await html2canvas(div, {
-            scale: 2,
-            backgroundColor: '#ffffff',
-            useCORS: true,
-            allowTaint: true,     // ← fix utama untuk logo base64
-            imageTimeout: 0,      // ← tidak ada timeout untuk gambar
-            logging: false
-        });
-        document.body.removeChild(div);
+        // Footer tanggal
+        y += 10;
+        doc.setFontSize(8); doc.setFont('helvetica','normal'); doc.setTextColor(150,150,150);
+        doc.text(`Dicetak: ${tglCetak}`, 14, y);
 
-        canvas.toBlob(async (blob) => {
-            const fileName = `Invoice_${jamaah.nama_lengkap.replace(/ /g,'_')}_${tglCetak.replace(/ /g,'')}.png`;
-            const file = new File([blob], fileName, { type: 'image/png' });
-            if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-                await navigator.share({ files: [file], title: `Invoice - ${jamaah.nama_lengkap}` });
-            } else {
-                const a = document.createElement('a');
-                a.href = URL.createObjectURL(blob);
-                a.download = fileName;
-                a.click();
-                showToast('⬇️ Invoice didownload sebagai gambar');
-            }
-        }, 'image/png');
+        // ── Share PDF ─────────────────────────────────────────────────────────
+        const blob = doc.output('blob');
+        const file = new File([blob], namaFile, { type: 'application/pdf' });
+
+        if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+            await navigator.share({ files: [file], title: `Invoice - ${jamaah.nama_lengkap}` });
+            showToast('✅ Invoice PDF dibagikan!');
+        } else {
+            doc.save(namaFile);
+            showToast('📥 Invoice PDF didownload');
+        }
     } catch(e) {
-        showToast('❌ Gagal: ' + e.message);
+        if(e.name !== 'AbortError') showToast('❌ Gagal: ' + e.message);
         console.error(e);
     }
 }
@@ -8145,99 +8176,164 @@ function exportPaymentExcel() {
 // ==================== CATATAN ====================
 let catatanList = [], editingCatatanIndex = null, currentDetailIndex = null;
 
-function loadCatatanData() { 
-    const saved = localStorage.getItem('navara_catatan_list'); 
-    catatanList = saved ? JSON.parse(saved) : []; 
-    renderCatatanList(); 
+const CATATAN_WARNA = {
+    default: { bg:'#f0fdf4', border:'#0D5C4A', dot:'#0D5C4A' },
+    merah:   { bg:'#fef2f2', border:'#EF4444', dot:'#EF4444' },
+    kuning:  { bg:'#fffbeb', border:'#F59E0B', dot:'#F59E0B' },
+    biru:    { bg:'#eff6ff', border:'#3B82F6', dot:'#3B82F6' },
+    ungu:    { bg:'#f5f3ff', border:'#8B5CF6', dot:'#8B5CF6' },
+};
+
+function pilihWarnaCatatan(warna) {
+    document.getElementById('entryWarna').value = warna;
+    Object.keys(CATATAN_WARNA).forEach(w => {
+        const el = document.getElementById('colorOpt_' + w);
+        if(el) el.style.border = w === warna ? '3px solid #333' : 'none';
+    });
 }
 
-function saveCatatanData() { 
-    localStorage.setItem('navara_catatan_list', JSON.stringify(catatanList)); 
-    renderCatatanList(); 
+function loadCatatanData() {
+    const saved = localStorage.getItem('navara_catatan_list');
+    catatanList = saved ? JSON.parse(saved) : [];
+    renderCatatanList();
 }
 
-function renderCatatanList() { 
-    const container = document.getElementById('catatanListContainer'); 
-    if(!container) return; 
-    if(catatanList.length === 0) { 
-        container.innerHTML = '<p style="text-align:center; padding:20px;">Belum ada catatan</p>'; 
-        return; 
-    } 
-    let html = ''; 
-    catatanList.forEach((item, idx) => { 
-        html += `<div class="catatan-card" onclick="viewDetailCatatan(${idx})"><div class="catatan-header"><div><div class="catatan-judul">📝 ${escapeHtml(item.judul)}</div><div class="catatan-tgl">📅 ${item.created_at || '-'}</div></div><div class="catatan-actions" onclick="event.stopPropagation()"><button class="btn-share-wa" onclick="shareCatatanItem(${idx})"><i class="fab fa-whatsapp"></i></button><button class="btn-edit-jamaah" onclick="editCatatan(${idx})"><i class="fas fa-edit"></i></button><button class="btn-delete-jamaah" onclick="confirmDeleteCatatan(${idx})"><i class="fas fa-trash"></i></button></div></div><div class="catatan-isi">${escapeHtml(item.isi).substring(0, 100)}${item.isi.length > 100 ? '...' : ''}</div></div>`; 
-    }); 
-    container.innerHTML = html; 
+function saveCatatanData() {
+    localStorage.setItem('navara_catatan_list', JSON.stringify(catatanList));
+    renderCatatanList();
 }
 
-function openTambahCatatan() { 
-    editingCatatanIndex = null; 
-    document.getElementById('entryModalTitle').innerText = 'Tambah Catatan'; 
-    document.getElementById('entryJudul').value = ''; 
-    document.getElementById('entryIsi').value = ''; 
-    document.getElementById('entryModal').classList.add('show'); 
+function renderCatatanList() {
+    const container = document.getElementById('catatanListContainer');
+    if(!container) return;
+    const keyword = (document.getElementById('catatanSearch')?.value || '').toLowerCase();
+    const filter = document.getElementById('catatanFilter')?.value || 'semua';
+    let list = [...catatanList];
+    if(filter === 'pin') list = list.filter(c => c.pinned);
+    if(keyword) list = list.filter(c =>
+        (c.judul||'').toLowerCase().includes(keyword) ||
+        (c.isi||'').toLowerCase().includes(keyword)
+    );
+    list.sort((a,b) => (b.pinned?1:0) - (a.pinned?1:0));
+    if(list.length === 0) {
+        container.innerHTML = `<p style="text-align:center;padding:30px;color:#999;">${keyword ? '🔍 Tidak ditemukan' : '📝 Belum ada catatan'}</p>`;
+        return;
+    }
+    let html = '';
+    list.forEach((item) => {
+        const idx = catatanList.indexOf(item);
+        const w = CATATAN_WARNA[item.warna || 'default'] || CATATAN_WARNA.default;
+        const judulText = item.judul || item.isi.substring(0,40).replace(/\n/g,' ');
+        const tgl = item.updated_at ? `✏️ ${item.updated_at}` : `📅 ${item.created_at || '-'}`;
+        html += `<div onclick="viewDetailCatatan(${idx})" style="background:${w.bg};border-left:4px solid ${w.border};border-radius:12px;padding:14px;margin-bottom:10px;cursor:pointer;">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">
+                <div style="flex:1;">
+                    <div style="font-weight:bold;font-size:14px;color:#1a1a1a;">${item.pinned ? '📌 ' : ''}${escapeHtml(judulText)}</div>
+                    <div style="font-size:11px;color:#888;margin-top:2px;">${tgl}</div>
+                </div>
+                <div onclick="event.stopPropagation()" style="display:flex;gap:5px;margin-left:8px;">
+                    <button onclick="togglePinCatatan(${idx})" style="background:${item.pinned?'#F59E0B':'#e2e8f0'};color:${item.pinned?'white':'#666'};border:none;border-radius:20px;padding:4px 8px;font-size:12px;cursor:pointer;">📌</button>
+                    <button onclick="editCatatan(${idx})" style="background:#3B82F6;color:white;border:none;border-radius:20px;padding:4px 8px;font-size:12px;cursor:pointer;">✏️</button>
+                    <button onclick="confirmDeleteCatatan(${idx})" style="background:#ef4444;color:white;border:none;border-radius:20px;padding:4px 8px;font-size:12px;cursor:pointer;">🗑️</button>
+                </div>
+            </div>
+            <div style="font-size:13px;color:#444;line-height:1.5;">${escapeHtml(item.isi).substring(0,120)}${item.isi.length>120?'...':''}</div>
+        </div>`;
+    });
+    container.innerHTML = html;
 }
 
-function editCatatan(idx) { 
-    editingCatatanIndex = idx; 
-    const item = catatanList[idx]; 
-    document.getElementById('entryModalTitle').innerText = 'Edit Catatan'; 
-    document.getElementById('entryJudul').value = item.judul; 
-    document.getElementById('entryIsi').value = item.isi; 
-    document.getElementById('entryModal').classList.add('show'); 
+function openTambahCatatan() {
+    editingCatatanIndex = null;
+    document.getElementById('entryModalTitle').innerText = '✏️ Catatan Baru';
+    document.getElementById('entryJudul').value = '';
+    document.getElementById('entryIsi').value = '';
+    pilihWarnaCatatan('default');
+    document.getElementById('entryModal').classList.add('show');
+    setTimeout(() => document.getElementById('entryIsi').focus(), 300);
 }
 
-function saveCatatanEntry() { 
-    const judul = document.getElementById('entryJudul').value.trim(); 
-    const isi = document.getElementById('entryIsi').value.trim(); 
-    if(!judul || !isi) return showToast('Isi judul dan konten!'); 
-    if(editingCatatanIndex !== null) { 
-        catatanList[editingCatatanIndex] = { ...catatanList[editingCatatanIndex], judul, isi, updated_at: new Date().toLocaleDateString('id-ID') }; 
-        showToast('Catatan diupdate'); 
-    } else { 
-        catatanList.push({ judul, isi, created_at: new Date().toLocaleDateString('id-ID') }); 
-        showToast('Catatan ditambahkan'); 
-    } 
-    saveCatatanData(); 
-    closeEntryModal(); 
+function editCatatan(idx) {
+    editingCatatanIndex = idx;
+    const item = catatanList[idx];
+    document.getElementById('entryModalTitle').innerText = '✏️ Edit Catatan';
+    document.getElementById('entryJudul').value = item.judul || '';
+    document.getElementById('entryIsi').value = item.isi;
+    pilihWarnaCatatan(item.warna || 'default');
+    document.getElementById('entryModal').classList.add('show');
 }
 
-function confirmDeleteCatatan(idx) { 
-    if(confirm('Hapus catatan ini?')) { 
-        catatanList.splice(idx,1); 
-        saveCatatanData(); 
-        showToast('Dihapus'); 
-    } 
+function saveCatatanEntry() {
+    const judul = document.getElementById('entryJudul').value.trim();
+    const isi = document.getElementById('entryIsi').value.trim();
+    const warna = document.getElementById('entryWarna').value || 'default';
+    if(!isi) return showToast('Isi catatan tidak boleh kosong!');
+    const now = new Date().toLocaleDateString('id-ID');
+    if(editingCatatanIndex !== null) {
+        catatanList[editingCatatanIndex] = { ...catatanList[editingCatatanIndex], judul, isi, warna, updated_at: now };
+        showToast('✅ Catatan diupdate');
+    } else {
+        catatanList.unshift({ judul, isi, warna, pinned: false, created_at: now });
+        showToast('✅ Catatan ditambahkan');
+    }
+    saveCatatanData();
+    closeEntryModal();
 }
 
-function viewDetailCatatan(idx) { 
-    currentDetailIndex = idx; 
-    const item = catatanList[idx]; 
-    document.getElementById('detailJudul').innerText = item.judul; 
-    document.getElementById('detailIsi').innerText = item.isi; 
-    document.getElementById('detailModal').classList.add('show'); 
+function togglePinCatatan(idx) {
+    catatanList[idx].pinned = !catatanList[idx].pinned;
+    saveCatatanData();
+    showToast(catatanList[idx].pinned ? '📌 Disematkan di atas' : 'Pin dilepas');
 }
 
-function shareDetailToWA() { 
-    const item = catatanList[currentDetailIndex]; 
-    if(!item) return; 
-    const text = `📝 *${item.judul}*\n\n${item.isi}\n\n#${getKonfigurasiProData().instansi1.nama || 'Navara'}`; 
-    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`); 
+function confirmDeleteCatatan(idx) {
+    if(confirm('Hapus catatan ini?')) {
+        catatanList.splice(idx,1);
+        saveCatatanData();
+        showToast('🗑️ Catatan dihapus');
+    }
 }
 
-function shareCatatanItem(idx) { 
-    const item = catatanList[idx]; 
-    const text = `📝 *${item.judul}*\n\n${item.isi}\n\n#${getKonfigurasiProData().instansi1.nama || 'Navara'}`; 
-    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`); 
+function viewDetailCatatan(idx) {
+    currentDetailIndex = idx;
+    const item = catatanList[idx];
+    document.getElementById('detailJudul').innerText = item.judul || '(Tanpa Judul)';
+    document.getElementById('detailIsi').innerText = item.isi;
+    document.getElementById('detailModal').classList.add('show');
 }
 
-function closeEntryModal() { 
-    document.getElementById('entryModal').classList.remove('show'); 
-    editingCatatanIndex = null; 
+function shareDetailToWA() {
+    const item = catatanList[currentDetailIndex];
+    if(!item) return;
+    const text = `📝 *${item.judul || 'Catatan'}*\n\n${item.isi}\n\n#${getKonfigurasiProData().instansi1.nama || 'Navara'}`;
+    if(navigator.share) {
+        navigator.share({ title: item.judul || 'Catatan', text }).catch(() => {
+            window.open(`https://wa.me/?text=${encodeURIComponent(text)}`);
+        });
+    } else {
+        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`);
+    }
 }
 
-function closeDetailModal() { 
-    document.getElementById('detailModal').classList.remove('show'); 
+function shareCatatanItem(idx) {
+    const item = catatanList[idx];
+    const text = `📝 *${item.judul || 'Catatan'}*\n\n${item.isi}\n\n#${getKonfigurasiProData().instansi1.nama || 'Navara'}`;
+    if(navigator.share) {
+        navigator.share({ title: item.judul || 'Catatan', text }).catch(() => {
+            window.open(`https://wa.me/?text=${encodeURIComponent(text)}`);
+        });
+    } else {
+        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`);
+    }
+}
+
+function closeEntryModal() {
+    document.getElementById('entryModal').classList.remove('show');
+    editingCatatanIndex = null;
+}
+
+function closeDetailModal() {
+    document.getElementById('detailModal').classList.remove('show');
 }
 
 // ==================== FOLDER VIRTUAL ====================
@@ -9111,6 +9207,40 @@ function previewDokumen(jamaahId, jenisId) {
         document.getElementById('previewDokumenImage').src = data; 
         document.getElementById('previewDokumenModal').classList.add('show'); 
     } 
+}
+
+function bukaDocPenuh() {
+    const img = document.getElementById('previewDokumenImage');
+    const judul = document.getElementById('previewDokumenTitle')?.innerText || 'Dokumen';
+    if(!img?.src) return;
+    // Buka di tab baru — user bisa zoom bebas pakai browser native
+    const win = window.open('', '_blank');
+    if(!win) return showToast('Izinkan popup untuk membuka dokumen penuh');
+    win.document.write(`<!DOCTYPE html><html><head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+        <title>${judul}</title>
+        <style>
+            * { margin:0; padding:0; box-sizing:border-box; }
+            body { background:#111; display:flex; flex-direction:column; min-height:100vh; }
+            .topbar { background:#0D5C4A; color:white; padding:12px 16px; display:flex;
+                      align-items:center; justify-content:space-between; position:sticky; top:0; z-index:9; }
+            .topbar h3 { font-size:14px; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+            .topbar button { background:rgba(255,255,255,0.2); color:white; border:none;
+                             padding:6px 14px; border-radius:20px; font-size:13px; cursor:pointer; margin-left:10px; }
+            .img-wrap { flex:1; display:flex; align-items:center; justify-content:center; padding:16px; }
+            img { max-width:100%; height:auto; border-radius:8px; touch-action:pinch-zoom; }
+            .hint { color:#888; font-size:12px; text-align:center; padding:8px 0 16px; }
+        </style>
+    </head><body>
+        <div class="topbar">
+            <h3>${judul}</h3>
+            <button onclick="window.close()">✕ Tutup</button>
+        </div>
+        <div class="img-wrap"><img src="${img.src}" alt="${judul}"></div>
+        <div class="hint">Cubit (pinch) untuk zoom • Geser untuk pindah</div>
+    </body></html>`);
+    win.document.close();
 }
 
 function closePreviewDokumenModal() { document.getElementById('previewDokumenModal').classList.remove('show'); }
