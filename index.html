@@ -7873,7 +7873,7 @@ function copyInvoiceText() {
 async function shareInvoiceGambar(jamaahId) {
     const jamaah = jamaahList.find(j => j.id == jamaahId);
     if (!jamaah) return showToast('Data jamaah tidak ditemukan');
-    showToast('⏳ Membuat PDF invoice...');
+    showToast('⏳ Menyiapkan invoice...');
     try {
         const cfg = getKonfigurasiProData();
         const transaksiList = paymentTransaksiList
@@ -7882,90 +7882,84 @@ async function shareInvoiceGambar(jamaahId) {
         const totalBayar = hitungTotalBayarJamaah(jamaahId);
         const totalHargaPaket = getTotalHargaPaket(jamaah) || 0;
         const sisa = totalHargaPaket - totalBayar;
-        const lunas = sisa <= 0;
+        const statusColor = sisa <= 0 ? '#10B981' : '#EF4444';
         const prefix = cfg.settings?.invoice_prefix || 'INV/NAVARA';
         const tglCetak = new Date().toLocaleDateString('id-ID', {day:'2-digit', month:'long', year:'numeric'});
         const noInvoice = `${prefix}/${jamaah.id}/${new Date().toLocaleDateString('id-ID').replace(/\//g,'')}`;
-        const namaFile = `Invoice_${jamaah.nama_lengkap.replace(/ /g,'_')}.pdf`;
 
-        // ── Generate jsPDF ────────────────────────────────────────────────────
-        const {jsPDF} = window.jspdf;
-        const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+        // Pakai buildPrintHeader SAMA PERSIS dengan cetakInvoiceAuto
+        const headerHtml = buildPrintHeader(cfg, tglCetak);
+        const watermarkHtml = buildPrintWatermark(cfg);
+        const qrHtml = await buildPrintQR(cfg, `Invoice:${noInvoice}\nJamaah:${jamaah.nama_lengkap}\nStatus:${sisa<=0?'LUNAS':'BELUM LUNAS'}`);
 
-        // Header instansi + logo (pakai applyPDFConfig yang sudah teruji)
-        await applyPDFConfig(doc, { landscape: false });
-
-        // Judul invoice
-        let y = 58;
-        doc.setFontSize(14); doc.setFont('helvetica','bold'); doc.setTextColor(26,93,74);
-        doc.text('INVOICE PEMBAYARAN', 105, y, { align: 'center' });
-        y += 6;
-        doc.setFontSize(8); doc.setFont('helvetica','normal'); doc.setTextColor(120,120,120);
-        doc.text(`No: ${noInvoice}`, 105, y, { align: 'center' });
-        y += 8;
-
-        // Info jamaah
-        doc.setFontSize(10); doc.setTextColor(50,50,50); doc.setFont('helvetica','bold');
-        doc.text('Nama Jamaah:', 14, y);
-        doc.setFont('helvetica','normal');
-        doc.text(jamaah.nama_lengkap, 50, y);
-        doc.setFont('helvetica','bold');
-        doc.text('Total Paket:', 140, y);
-        doc.setFont('helvetica','normal');
-        doc.text(formatRupiah(totalHargaPaket), 168, y);
-        y += 10;
-
-        // Tabel transaksi
-        const tableData = transaksiList.map((t,i) => [
-            i+1, t.tanggal, t.keterangan||'-', t.metode||'-', formatRupiah(t.nominal)
-        ]);
-        if(!tableData.length) tableData.push(['-','-','Belum ada transaksi','-','-']);
-
-        doc.autoTable({
-            startY: y,
-            head: [['No','Tanggal','Keterangan','Metode','Nominal']],
-            body: tableData,
-            theme: 'striped',
-            headStyles: { fillColor: [26,93,74], fontSize: 9 },
-            styles: { fontSize: 9, lineWidth: 0.1 },
-            columnStyles: { 0:{cellWidth:10,halign:'center'}, 4:{halign:'right'} }
+        let rowsHtml = '';
+        transaksiList.forEach((t,i) => {
+            rowsHtml += `<tr><td style="padding:8px;border-bottom:1px solid #eee;text-align:center;">${i+1}</td><td style="padding:8px;border-bottom:1px solid #eee;">${t.tanggal}</td><td style="padding:8px;border-bottom:1px solid #eee;">${t.keterangan||'-'}</td><td style="padding:8px;border-bottom:1px solid #eee;">${t.metode||'-'}</td><td style="padding:8px;border-bottom:1px solid #eee;text-align:right;">${formatRupiah(t.nominal)}</td></tr>`;
         });
+        if(!transaksiList.length) rowsHtml = `<tr><td colspan="5" style="padding:12px;text-align:center;color:#999;">Belum ada transaksi</td></tr>`;
 
-        y = doc.lastAutoTable.finalY + 8;
+        // Render off-screen dengan HTML IDENTIK dengan cetakInvoiceAuto
+        const wrapper = document.createElement('div');
+        wrapper.style.cssText = 'position:fixed;left:-9999px;top:0;width:720px;background:#f0f0f0;padding:20px;font-family:Segoe UI,Arial,sans-serif;';
+        wrapper.innerHTML = `
+        <div style="background:white;max-width:680px;margin:0 auto;border-radius:16px;padding:30px;box-shadow:0 2px 16px rgba(0,0,0,0.1);position:relative;overflow:hidden;">
+            <div style="position:absolute;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:0;overflow:hidden;">${watermarkHtml}</div>
+            <div style="position:relative;z-index:1;">
+                ${headerHtml}
+                <h2 style="color:#0D5C4A;font-size:22px;text-align:center;margin-bottom:4px;">INVOICE PEMBAYARAN</h2>
+                <div style="text-align:center;color:#888;font-size:12px;margin-bottom:20px;">No: ${noInvoice}</div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:20px;font-size:13px;line-height:2;">
+                    <div><strong>Nama Jamaah</strong><br>${escapeHtml(jamaah.nama_lengkap)}</div>
+                    <div style="text-align:right;"><strong>Total Paket</strong><br>${formatRupiah(totalHargaPaket)}</div>
+                </div>
+                <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:20px;">
+                    <thead><tr>
+                        <th style="background:#0D5C4A;color:white;padding:10px 8px;width:36px;">No</th>
+                        <th style="background:#0D5C4A;color:white;padding:10px 8px;">Tanggal</th>
+                        <th style="background:#0D5C4A;color:white;padding:10px 8px;">Keterangan</th>
+                        <th style="background:#0D5C4A;color:white;padding:10px 8px;">Metode</th>
+                        <th style="background:#0D5C4A;color:white;padding:10px 8px;text-align:right;">Nominal</th>
+                    </tr></thead>
+                    <tbody>${rowsHtml}</tbody>
+                </table>
+                <div style="background:#f8f8f8;border-radius:10px;padding:14px;font-size:13px;line-height:2.2;">
+                    <div>Total Paket &nbsp;&nbsp;: <strong>${formatRupiah(totalHargaPaket)}</strong></div>
+                    <div>Total Dibayar : <strong>${formatRupiah(totalBayar)}</strong></div>
+                    <div>Sisa Tagihan &nbsp;: <strong>${formatRupiah(sisa>0?sisa:0)}</strong></div>
+                    <div style="font-size:16px;font-weight:bold;color:${statusColor};margin-top:8px;">${sisa<=0?'✅ LUNAS':'⚠️ BELUM LUNAS'}</div>
+                </div>
+                ${qrHtml}
+            </div>
+        </div>`;
+        document.body.appendChild(wrapper);
 
-        // Summary box
-        doc.setDrawColor(220,220,220); doc.setFillColor(248,248,248);
-        doc.roundedRect(14, y, 182, 30, 3, 3, 'FD');
-        y += 8;
-        doc.setFontSize(10); doc.setTextColor(50,50,50);
-        doc.text('Total Paket:', 20, y); doc.setFont('helvetica','bold'); doc.text(formatRupiah(totalHargaPaket), 190, y, {align:'right'});
-        doc.setFont('helvetica','normal'); y += 7;
-        doc.text('Total Dibayar:', 20, y); doc.setFont('helvetica','bold'); doc.text(formatRupiah(totalBayar), 190, y, {align:'right'});
-        doc.setFont('helvetica','normal'); y += 7;
-        doc.text('Sisa Tagihan:', 20, y); doc.setFont('helvetica','bold'); doc.text(formatRupiah(sisa>0?sisa:0), 190, y, {align:'right'});
-        y += 10;
+        // Tunggu gambar (logo) selesai load
+        const images = wrapper.querySelectorAll('img');
+        await Promise.all([...images].map(img =>
+            img.complete ? Promise.resolve() :
+            new Promise(r => { img.onload = r; img.onerror = r; setTimeout(r, 3000); })
+        ));
+        await new Promise(r => setTimeout(r, 150));
 
-        // Status lunas
-        doc.setFontSize(13); doc.setFont('helvetica','bold');
-        doc.setTextColor(lunas ? 16 : 220, lunas ? 185 : 38, lunas ? 129 : 38);
-        doc.text(lunas ? '✓ LUNAS' : '⚠ BELUM LUNAS', 105, y, { align: 'center' });
+        const canvas = await html2canvas(wrapper.firstElementChild, {
+            scale: 2, backgroundColor: '#ffffff',
+            useCORS: true, allowTaint: true, imageTimeout: 0, logging: false
+        });
+        document.body.removeChild(wrapper);
 
-        // Footer tanggal
-        y += 10;
-        doc.setFontSize(8); doc.setFont('helvetica','normal'); doc.setTextColor(150,150,150);
-        doc.text(`Dicetak: ${tglCetak}`, 14, y);
-
-        // ── Share PDF ─────────────────────────────────────────────────────────
-        const blob = doc.output('blob');
-        const file = new File([blob], namaFile, { type: 'application/pdf' });
-
-        if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-            await navigator.share({ files: [file], title: `Invoice - ${jamaah.nama_lengkap}` });
-            showToast('✅ Invoice PDF dibagikan!');
-        } else {
-            doc.save(namaFile);
-            showToast('📥 Invoice PDF didownload');
-        }
+        canvas.toBlob(async (blob) => {
+            const fileName = `Invoice_${jamaah.nama_lengkap.replace(/ /g,'_')}.png`;
+            const file = new File([blob], fileName, { type: 'image/png' });
+            if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+                await navigator.share({ files: [file], title: `Invoice - ${jamaah.nama_lengkap}` });
+            } else {
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = fileName;
+                a.click();
+                showToast('⬇️ Invoice didownload sebagai gambar');
+            }
+        }, 'image/png');
     } catch(e) {
         if(e.name !== 'AbortError') showToast('❌ Gagal: ' + e.message);
         console.error(e);
