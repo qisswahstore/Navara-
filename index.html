@@ -2162,12 +2162,20 @@
                     oninput="renderCatatanList()"
                     style="width:100%;padding:11px 14px 11px 36px;border:1.5px solid #e2e8f0;border-radius:24px;font-size:14px;outline:none;background:#f8fafc;">
             </div>
-            <select id="catatanFilter" onchange="renderCatatanList()"
-                style="padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:24px;font-size:13px;background:white;outline:none;color:#444;">
-                <option value="semua">Semua</option>
-                <option value="pin">📌 Pin</option>
-            </select>
+            <div style="position:relative;">
+                <button id="catatanFilterBtn" onclick="toggleCatatanFilterMenu()"
+                    style="width:42px;height:42px;border-radius:50%;background:#f8fafc;border:1.5px solid #e2e8f0;cursor:pointer;font-size:16px;">
+                    ⚙️
+                </button>
+                <div id="catatanFilterMenu" style="display:none;position:absolute;right:0;top:48px;background:white;border:1.5px solid #e2e8f0;border-radius:12px;padding:8px 0;z-index:99;min-width:130px;box-shadow:0 4px 12px rgba(0,0,0,0.1);">
+                    <div onclick="setCatatanFilter('semua')" id="filterOpt_semua"
+                        style="padding:10px 16px;cursor:pointer;font-size:14px;color:#0D5C4A;font-weight:bold;">● Semua</div>
+                    <div onclick="setCatatanFilter('pin')" id="filterOpt_pin"
+                        style="padding:10px 16px;cursor:pointer;font-size:14px;color:#444;">○ 📌 Pinned</div>
+                </div>
+            </div>
         </div>
+        <input type="hidden" id="catatanFilter" value="semua">
         <div id="catatanListContainer"></div>
     </div>
     <!-- Floating button + -->
@@ -8203,6 +8211,29 @@ const CATATAN_WARNA = {
     ungu:    { bg:'#f5f3ff', border:'#8B5CF6', dot:'#8B5CF6' },
 };
 
+function toggleCatatanFilterMenu() {
+    const menu = document.getElementById('catatanFilterMenu');
+    if(menu) menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+}
+
+function setCatatanFilter(val) {
+    document.getElementById('catatanFilter').value = val;
+    // Update tampilan opsi
+    ['semua','pin'].forEach(opt => {
+        const el = document.getElementById('filterOpt_' + opt);
+        if(el) {
+            el.style.color = opt === val ? '#0D5C4A' : '#444';
+            el.style.fontWeight = opt === val ? 'bold' : 'normal';
+            el.textContent = (opt === val ? '● ' : '○ ') + (opt === 'semua' ? 'Semua' : '📌 Pinned');
+        }
+    });
+    // Ubah warna ikon filter kalau aktif
+    const btn = document.getElementById('catatanFilterBtn');
+    if(btn) btn.style.background = val !== 'semua' ? '#0D5C4A' : '#f8fafc';
+    toggleCatatanFilterMenu();
+    renderCatatanList();
+}
+
 function pilihWarnaCatatan(warna) {
     document.getElementById('entryWarna').value = warna;
     Object.keys(CATATAN_WARNA).forEach(w => {
@@ -8262,6 +8293,9 @@ function renderCatatanList() {
         return tgl;
     };
 
+    const warnaBg = {
+        default:'#e8f5f0', merah:'#fde8e8', kuning:'#fef9e7', biru:'#e8f0fe', ungu:'#f0ebff'
+    };
     const warnaBorder = {
         default:'#0D5C4A', merah:'#EF4444', kuning:'#F59E0B', biru:'#3B82F6', ungu:'#8B5CF6'
     };
@@ -8269,6 +8303,7 @@ function renderCatatanList() {
     let html = '';
     list.forEach((item) => {
         const idx = item._idx;
+        const bg = warnaBg[item.warna || 'default'] || warnaBg.default;
         const border = warnaBorder[item.warna || 'default'] || '#0D5C4A';
         const judulText = item.judul || item.isi.substring(0,50).replace(/\n/g,' ');
         const tglStr = item.updated_at
@@ -8278,18 +8313,16 @@ function renderCatatanList() {
 
         html += `
         <div onclick="viewDetailCatatan(${idx})"
-             style="border-left:4px solid ${border};background:white;border-radius:0 10px 10px 0;
+             style="border-left:4px solid ${border};background:${bg};border-radius:0 10px 10px 0;
                     padding:12px 14px;margin-bottom:8px;cursor:pointer;
-                    box-shadow:0 1px 4px rgba(0,0,0,0.07);transition:box-shadow 0.2s;"
-             onmouseenter="this.style.boxShadow='0 3px 10px rgba(0,0,0,0.12)'"
-             onmouseleave="this.style.boxShadow='0 1px 4px rgba(0,0,0,0.07)'">
+                    box-shadow:0 1px 4px rgba(0,0,0,0.06);">
             <div style="display:flex;justify-content:space-between;align-items:flex-start;">
                 <div style="font-weight:600;font-size:15px;color:#1a1a1a;flex:1;line-height:1.3;">
                     ${item.pinned ? '<span style="color:#F59E0B;font-size:13px;">📌 </span>' : ''}${escapeHtml(judulText)}
                 </div>
-                <div style="font-size:11px;color:#aaa;margin-left:10px;white-space:nowrap;">${tglStr}</div>
+                <div style="font-size:11px;color:#888;margin-left:10px;white-space:nowrap;">${tglStr}</div>
             </div>
-            ${item.isi.length > 0 ? `<div style="font-size:13px;color:#888;margin-top:4px;line-height:1.4;">${escapeHtml(preview)}${item.isi.length>80?'…':''}</div>` : ''}
+            ${item.isi.length > 0 ? `<div style="font-size:13px;color:#555;margin-top:4px;line-height:1.4;">${escapeHtml(preview)}${item.isi.length>80?'…':''}</div>` : ''}
         </div>`;
     });
     container.innerHTML = html;
