@@ -2179,7 +2179,7 @@
         <div id="catatanListContainer"></div>
     </div>
     <!-- Floating button + -->
-    <button onclick="openTambahCatatan()" style="position:fixed;bottom:80px;right:20px;width:56px;height:56px;border-radius:50%;background:#0D5C4A;color:white;border:none;font-size:26px;cursor:pointer;box-shadow:0 4px 16px rgba(13,92,74,0.4);z-index:999;display:flex;align-items:center;justify-content:center;">＋</button>
+    <button id="catatanFabBtn" onclick="openTambahCatatan()" style="position:fixed;bottom:80px;right:20px;width:56px;height:56px;border-radius:50%;background:#0D5C4A;color:white;border:none;font-size:26px;cursor:pointer;box-shadow:0 4px 16px rgba(13,92,74,0.4);z-index:999;display:none;align-items:center;justify-content:center;">＋</button>
 </div>
 
 <!-- ZAKAT PAGE -->
@@ -3077,15 +3077,24 @@ function internalShowPage(pageId) {
     document.body.style.paddingBottom = isMainPage ? '' : '0';
     if (pageId === 'kas') { if(window.renderKasTable) window.renderKasTable(); if(window.updateSaldoKas) window.updateSaldoKas(); }
     if (pageId === 'jamaah') { if(window.loadJamaahData) window.loadJamaahData(); if(window.renderJamaahListWithPagination) window.renderJamaahListWithPagination(); }
-    if (pageId === 'jamaahkita') { selectedJamaahKitaIds = []; updateJamaahKitaBatchBar(); renderPilihJamaahKita(); renderJamaahKitaList(); renderJamaahKitaDynamicFieldsForm(); if(isAdminModePremium) renderJamaahKitaFieldsList(); }
+    if (pageId === 'jamaahkita') {
+        const c = document.getElementById('jamaahKitaListContainer');
+        if(c) c.innerHTML = '<div style="text-align:center;padding:30px;color:#aaa;"><div style="font-size:30px;">⏳</div>Memuat data...</div>';
+        setTimeout(() => { selectedJamaahKitaIds = []; updateJamaahKitaBatchBar(); renderPilihJamaahKita(); renderJamaahKitaList(); renderJamaahKitaDynamicFieldsForm(); if(isAdminModePremium) renderJamaahKitaFieldsList(); }, 50);
+    }
     if (pageId === 'zakat') { if(window.renderSumberHartaList) window.renderSumberHartaList(); }
-    if (pageId === 'pembayaran') { if(window.renderPaymentDashboard) window.renderPaymentDashboard(); if(window.renderPaymentJamaahList) window.renderPaymentJamaahList(); if(window.populatePaymentJamaahDropdown) window.populatePaymentJamaahDropdown(); }
+    if (pageId === 'pembayaran') {
+        const cp = document.getElementById('paymentJamaahListContainer');
+        if(cp) cp.innerHTML = '<div style="text-align:center;padding:30px;color:#aaa;"><div style="font-size:30px;">⏳</div>Memuat data...</div>';
+        setTimeout(() => { if(window.renderPaymentDashboard) window.renderPaymentDashboard(); if(window.renderPaymentJamaahList) window.renderPaymentJamaahList(); if(window.populatePaymentJamaahDropdown) window.populatePaymentJamaahDropdown(); }, 50);
+    }
     if (pageId === 'datamaster') { if(window.loadMasterData) window.loadMasterData(); if(window.renderDynamicModeSwitcher) window.renderDynamicModeSwitcher(); }
     if (pageId === 'home') { updateLicenseBanner(); updateLicenseSummary(); }
     if (pageId === 'lisensi') { renderLicenseStatus(); }
     if (pageId === 'setting') { updateLicenseSummary(); }
     if (pageId === 'konfigurasi') { if(window.loadKonfigurasiPro) window.loadKonfigurasiPro(); setTimeout(applyKonfigurasiLock, 400); }
-    if (pageId === 'catatan') { if(window.renderCatatanList) window.renderCatatanList(); }
+    if (pageId === 'catatan') { if(window.renderCatatanList) window.renderCatatanList(); const fab = document.getElementById('catatanFabBtn'); if(fab) fab.style.display = 'flex'; }
+    else { const fab = document.getElementById('catatanFabBtn'); if(fab) fab.style.display = 'none'; }
     if (pageId === 'uploaddokumen') { 
         // PENTING: Reload jamaah data DAN dokumen data untuk memastikan semua ter-load
         Promise.all([
