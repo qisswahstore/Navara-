@@ -2178,8 +2178,6 @@
         <input type="hidden" id="catatanFilter" value="semua">
         <div id="catatanListContainer"></div>
     </div>
-    <!-- Floating button + -->
-    <button id="catatanFabBtn" onclick="openTambahCatatan()" style="position:fixed;bottom:80px;right:20px;width:56px;height:56px;border-radius:50%;background:#0D5C4A;color:white;border:none;font-size:26px;cursor:pointer;box-shadow:0 4px 16px rgba(13,92,74,0.4);z-index:999;display:none;align-items:center;justify-content:center;">＋</button>
 </div>
 
 <!-- ZAKAT PAGE -->
@@ -2381,22 +2379,6 @@
             </div>
         </div>
         <div class="setting-card" id="modePenyimpananCard">
-<h4><i class="fas fa-cloud"></i> Mode Penyimpanan</h4>
-<div id="modeOfflineInfo" style="display:flex; align-items:center; justify-content:space-between; margin-top:8px;">
-<div>
-<div style="font-weight:600;">📱 Offline <span style="background:var(--primary); color:white; font-size:10px; padding:2px 8px; border-radius:10px; margin-left:4px;">Aktif</span></div>
-<div style="font-size:12px; color:var(--gray); margin-top:2px;">Data tersimpan di HP</div>
-</div>
-<button onclick="gantiKeGoogle()" style="background:white; border:2px solid var(--primary); color:var(--primary); padding:8px 12px; border-radius:10px; font-size:12px; font-weight:600; cursor:pointer;">🔑 Ganti ke Google</button>
-</div>
-<div id="modeGoogleInfo" style="display:none; align-items:center; justify-content:space-between; margin-top:8px;">
-<div>
-<div style="font-weight:600;">☁️ Google Drive <span style="background:var(--teal); color:white; font-size:10px; padding:2px 8px; border-radius:10px; margin-left:4px;">Aktif</span></div>
-<div style="font-size:12px; color:var(--gray); margin-top:2px;" id="googleEmailInfo">Terhubung</div>
-</div>
-<button onclick="putuskanGoogle()" style="background:white; border:2px solid var(--red); color:var(--red); padding:8px 12px; border-radius:10px; font-size:12px; font-weight:600; cursor:pointer;">🔌 Putuskan</button>
-</div>
-</div>
 <div class="setting-card"><div class="setting-row"><span><i class="fas fa-user-shield"></i>  Mode Admin</span><label class="switch"><input type="checkbox" id="adminMode" onchange="toggleAdminMode()"><span class="slider"></span></label></div></div>
         <div class="setting-card"><h4> Warna Tema</h4><div class="color-options" id="colorOptions"></div></div>
         <div class="setting-card"><h4> Atur Tampilan Menu</h4><div id="menuSettingsContainer"></div></div>
@@ -2837,11 +2819,20 @@
         
         <div class="card-premium">
             <div class="cloud-item">
-                <div class="cloud-info"><div class="cloud-icon"><i class="fab fa-google-drive"></i></div><div><div class="cloud-name">Google Drive</div><div class="cloud-status" id="driveStatus"><span class="status-disconnected"> Belum Terhubung</span></div></div></div>
-                <div><button id="driveConnectBtn" class="btn-connect" onclick="connectGoogleDrive()"> Hubungkan</button>
-                <button id="driveBackupBtn" class="btn-connect" style="display:none; background: var(--primary);" onclick="backupToDrive()"> Backup</button>
-                <button id="driveRestoreBtn" class="btn-connect" style="display:none; background: var(--purple);" onclick="restoreFromDrive()"> Restore</button>
-                <button id="driveDisconnectBtn" class="btn-connect" style="display:none; background: var(--gray-light); color: var(--dark);" onclick="disconnectDrive()"> Putus</button></div>
+                <div class="cloud-info">
+                    <div class="cloud-icon"><i class="fab fa-google-drive"></i></div>
+                    <div>
+                        <div class="cloud-name">Google Drive</div>
+                        <div class="cloud-status" id="driveStatus"><span class="status-disconnected">Belum Terhubung</span></div>
+                        <div style="font-size:11px;color:#888;margin-top:2px;">Login Google + backup otomatis ke Drive Anda</div>
+                    </div>
+                </div>
+                <div>
+                    <button id="driveConnectBtn" class="btn-connect" onclick="connectGoogleDrive()">☁️ Hubungkan</button>
+                    <button id="driveBackupBtn" class="btn-connect" style="display:none;background:var(--primary);" onclick="backupToDrive()">⬆️ Backup</button>
+                    <button id="driveRestoreBtn" class="btn-connect" style="display:none;background:var(--purple);" onclick="restoreFromDrive()">⬇️ Restore</button>
+                    <button id="driveDisconnectBtn" class="btn-connect" style="display:none;background:var(--gray-light);color:var(--dark);" onclick="disconnectDrive()">🔌 Putus</button>
+                </div>
             </div>
         </div>
     </div>
@@ -12222,5 +12213,14 @@ function cetakDariPreviewAlternatif() {
         </div>
     </div>
 </div>
+
+<!-- Floating button Catatan - di luar semua page div supaya tidak loncat -->
+<button id="catatanFabBtn" onclick="openTambahCatatan()"
+    style="position:fixed;bottom:80px;right:20px;width:56px;height:56px;
+           border-radius:50%;background:#0D5C4A;color:white;border:none;
+           font-size:26px;cursor:pointer;
+           box-shadow:0 4px 16px rgba(13,92,74,0.4);
+           z-index:999;display:none;align-items:center;justify-content:center;">＋</button>
+
 </body>
     </html>
