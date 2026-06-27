@@ -2905,6 +2905,20 @@
     <h3 id="previewDokumenTitle">Preview Dokumen</h3>
     <img id="previewDokumenImage" class="preview-img" style="max-width:100%;border-radius:12px;margin:12px 0;display:block;">
     <div id="previewDokumenDataContainer"></div>
+
+    <!-- OCR Section -->
+    <div style="margin-top:14px;border-top:1.5px solid #e2e8f0;padding-top:14px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <div style="font-weight:bold;font-size:14px;color:#3B82F6;">🔍 Scan Teks (OCR)</div>
+            <button id="btnScanOCR" onclick="mulaiOCR()"
+                style="background:#3B82F6;color:white;border:none;border-radius:20px;padding:6px 14px;font-size:12px;cursor:pointer;">
+                🔍 Scan Dokumen
+            </button>
+        </div>
+        <div id="ocrStatus" style="font-size:12px;color:#888;margin-bottom:8px;display:none;"></div>
+        <div id="ocrHasil"></div>
+    </div>
+
     <div style="display:flex;gap:10px;margin-top:14px;position:sticky;bottom:0;background:white;padding:8px 0;">
         <button class="btn btn-primary" style="flex:1;" onclick="bukaDocPenuh()">🔍 Buka Penuh</button>
         <button class="btn" style="flex:1;background:#e2e8f0;color:#333;" onclick="closePreviewDokumenModal()">Tutup</button>
@@ -9502,7 +9516,98 @@ function bukaDocPenuh() {
     win.document.close();
 }
 
-function closePreviewDokumenModal() { document.getElementById('previewDokumenModal').classList.remove('show'); }
+function closePreviewDokumenModal() {
+    document.getElementById('previewDokumenModal').classList.remove('show');
+    // Reset OCR
+    const ocrHasil = document.getElementById('ocrHasil');
+    const ocrStatus = document.getElementById('ocrStatus');
+    if(ocrHasil) ocrHasil.innerHTML = '';
+    if(ocrStatus) { ocrStatus.style.display = 'none'; ocrStatus.innerText = ''; }
+    const btn = document.getElementById('btnScanOCR');
+    if(btn) { btn.disabled = false; btn.innerHTML = '🔍 Scan Dokumen'; }
+}
+
+async function mulaiOCR() {
+    const img = document.getElementById('previewDokumenImage');
+    if(!img?.src) return showToast('Tidak ada gambar untuk di-scan');
+
+    const btn = document.getElementById('btnScanOCR');
+    const status = document.getElementById('ocrStatus');
+    const hasil = document.getElementById('ocrHasil');
+
+    btn.disabled = true;
+    btn.innerHTML = '⏳ Memuat...';
+    status.style.display = 'block';
+    status.innerHTML = '⏳ Memuat engine OCR... (pertama kali agak lama)';
+    hasil.innerHTML = '';
+
+    try {
+        // Load Tesseract.js on-demand
+        if(!window.Tesseract) {
+            await new Promise((resolve, reject) => {
+                const s = document.createElement('script');
+                s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+                s.onload = resolve;
+                s.onerror = () => reject(new Error('Gagal load OCR engine'));
+                document.head.appendChild(s);
+            });
+        }
+
+        status.innerHTML = '🔍 Membaca teks dari gambar...';
+        btn.innerHTML = '⏳ Scanning...';
+
+        const { data: { text } } = await Tesseract.recognize(img.src, 'ind+eng', {
+            logger: m => {
+                if(m.status === 'recognizing text') {
+                    const pct = Math.round((m.progress || 0) * 100);
+                    status.innerHTML = `🔍 Membaca teks... ${pct}%`;
+                }
+            }
+        });
+
+        // Tampilkan hasil
+        status.innerHTML = '✅ Scan selesai';
+        btn.innerHTML = '🔄 Scan Ulang';
+        btn.disabled = false;
+
+        if(!text.trim()) {
+            hasil.innerHTML = '<div style="color:#888;font-size:13px;padding:8px 0;">Tidak ada teks yang terbaca. Coba foto dengan kualitas lebih baik.</div>';
+            return;
+        }
+
+        // Split per baris, tampilkan dengan tombol copy per baris
+        const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 2);
+        const allText = lines.join('\n');
+
+        let html = `
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <div style="font-size:12px;color:#888;">${lines.length} baris terbaca</div>
+            <button onclick="copyTeks('${encodeURIComponent(allText)}', 'Semua teks disalin!')"
+                style="background:#3B82F6;color:white;border:none;border-radius:20px;padding:5px 12px;font-size:12px;cursor:pointer;">
+                📋 Copy Semua
+            </button>
+        </div>`;
+
+        lines.forEach(line => {
+            const safeLine = line.replace(/'/g, "\\'");
+            html += `
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #f0f0f0;">
+                <div style="font-size:13px;color:#1a1a1a;flex:1;font-family:monospace;">${escapeHtml(line)}</div>
+                <button onclick="copyTeks('${encodeURIComponent(safeLine)}', 'Teks disalin!')"
+                    style="background:#e8f0fe;color:#3B82F6;border:none;border-radius:20px;padding:4px 10px;font-size:12px;cursor:pointer;margin-left:8px;white-space:nowrap;">
+                    📋
+                </button>
+            </div>`;
+        });
+
+        hasil.innerHTML = html;
+
+    } catch(e) {
+        status.innerHTML = '❌ Gagal: ' + e.message;
+        btn.innerHTML = '🔍 Coba Lagi';
+        btn.disabled = false;
+    }
+}
 
 async function confirmDeleteDokumen(jamaahId, jenisId, jenisNama) { 
     if(confirm(`Hapus dokumen ${jenisNama} untuk jamaah ini?`)) { 
