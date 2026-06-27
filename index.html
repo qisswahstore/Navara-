@@ -9575,32 +9575,29 @@ async function mulaiOCR() {
             return;
         }
 
-        // Split per baris, tampilkan dengan tombol copy per baris
-        const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 2);
-        const allText = lines.join('\n');
+        const cleanText = text.trim();
+        const encAll = encodeURIComponent(cleanText);
 
-        let html = `
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-            <div style="font-size:12px;color:#888;">${lines.length} baris terbaca</div>
-            <button onclick="copyTeks('${encodeURIComponent(allText)}', 'Semua teks disalin!')"
-                style="background:#3B82F6;color:white;border:none;border-radius:20px;padding:5px 12px;font-size:12px;cursor:pointer;">
+        hasil.innerHTML = `
+        <div style="margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
+            <div style="font-size:12px;color:#888;">Seleksi teks yang diinginkan lalu copy</div>
+            <button onclick="copyTeks('${encAll}', 'Semua teks disalin!')"
+                style="background:#3B82F6;color:white;border:none;border-radius:20px;padding:5px 14px;font-size:12px;cursor:pointer;">
                 📋 Copy Semua
             </button>
+        </div>
+        <div id="ocrTextBox"
+            contenteditable="true"
+            spellcheck="false"
+            style="width:100%;min-height:120px;max-height:300px;overflow-y:auto;
+                   padding:12px;border:1.5px solid #e2e8f0;border-radius:10px;
+                   font-size:14px;line-height:1.8;color:#1a1a1a;font-family:monospace;
+                   background:#f8fafc;white-space:pre-wrap;word-break:break-all;
+                   user-select:text;-webkit-user-select:text;cursor:text;"
+            >${escapeHtml(cleanText)}</div>
+        <div style="font-size:11px;color:#aaa;margin-top:6px;text-align:center;">
+            Tap & tahan lalu geser untuk pilih teks • Lalu tap Salin
         </div>`;
-
-        lines.forEach(line => {
-            const safeLine = line.replace(/'/g, "\\'");
-            html += `
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #f0f0f0;">
-                <div style="font-size:13px;color:#1a1a1a;flex:1;font-family:monospace;">${escapeHtml(line)}</div>
-                <button onclick="copyTeks('${encodeURIComponent(safeLine)}', 'Teks disalin!')"
-                    style="background:#e8f0fe;color:#3B82F6;border:none;border-radius:20px;padding:4px 10px;font-size:12px;cursor:pointer;margin-left:8px;white-space:nowrap;">
-                    📋
-                </button>
-            </div>`;
-        });
-
-        hasil.innerHTML = html;
 
     } catch(e) {
         status.innerHTML = '❌ Gagal: ' + e.message;
