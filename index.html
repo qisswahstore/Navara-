@@ -2901,7 +2901,15 @@
     <button onclick="closeDetailModal()" style="width:100%;margin-top:8px;padding:10px;background:#e2e8f0;color:#333;border:none;border-radius:20px;font-size:14px;cursor:pointer;">Tutup</button>
 </div></div>
 <div id="dokumenFieldModal" class="modal"><div class="modal-content"><h3>Tambah Jenis Dokumen</h3><div class="dynamic-field"><label>Nama Dokumen</label><input type="text" id="newDokumenName" placeholder="Contoh: Visa, Tiket, Sertifikat"></div><div class="dynamic-field"><label>Icon</label><select id="newDokumenIcon"><option value="🪪"> KTP</option><option value="📘"> Paspor</option><option value="📷"> Foto</option><option value="💉"> Vaksin</option><option value="🛂"> Visa</option><option value="🎫"> Tiket</option><option value="📄"> Dokumen</option></select></div><button class="btn btn-primary" onclick="addDokumenField()"> TAMBAH</button><button class="btn btn-danger mt-2" onclick="closeDokumenFieldModal()">BATAL</button></div></div>
-<div id="previewDokumenModal" class="modal"><div class="modal-content"><h3 id="previewDokumenTitle">Preview Dokumen</h3><img id="previewDokumenImage" class="preview-img" style="max-width:100%; border-radius:16px; margin:15px 0;"><div style="display:flex;gap:10px;margin-top:8px;"><button class="btn btn-primary" style="flex:1;" onclick="bukaDocPenuh()">🔍 Buka Penuh</button><button class="btn" style="flex:1;background:#e2e8f0;color:#333;" onclick="closePreviewDokumenModal()">Tutup</button></div></div></div>
+<div id="previewDokumenModal" class="modal"><div class="modal-content" style="max-height:90vh;overflow-y:auto;">
+    <h3 id="previewDokumenTitle">Preview Dokumen</h3>
+    <img id="previewDokumenImage" class="preview-img" style="max-width:100%;border-radius:12px;margin:12px 0;display:block;">
+    <div id="previewDokumenDataContainer"></div>
+    <div style="display:flex;gap:10px;margin-top:14px;position:sticky;bottom:0;background:white;padding:8px 0;">
+        <button class="btn btn-primary" style="flex:1;" onclick="bukaDocPenuh()">🔍 Buka Penuh</button>
+        <button class="btn" style="flex:1;background:#e2e8f0;color:#333;" onclick="closePreviewDokumenModal()">Tutup</button>
+    </div>
+</div></div>
 <div id="batchFloatingBar" class="batch-floating-bar" style="position:fixed; bottom:80px; left:50%; transform:translateX(-50%); background:white; padding:12px 20px; border-radius:50px; box-shadow:0 4px 15px rgba(0,0,0,0.2); display:none; align-items:center; gap:10px; border:2px solid #0D5C4A; z-index:9999;">
     <span id="batchCount" class="batch-count">0 dipilih</span>
     <button onclick="showPindahModeModal()" style="background:#0D5C4A;color:white;border:none;padding:8px 14px;border-radius:30px;font-size:12px;cursor:pointer;">🔀 Pindah Mode</button>
@@ -9368,15 +9376,96 @@ async function bagikanDokumen(jamaahId, jenisId, jenisNama, jamaahNama) {
     }
 }
 
-function previewDokumen(jamaahId, jenisId) { 
-    const data = dokumenData[jamaahId]?.[jenisId]; 
-    if(data) { 
-        const jamaah = jamaahList.find(j => j.id == jamaahId); 
-        const jenis = dokumenJenisList.find(j => j.id === jenisId); 
-        document.getElementById('previewDokumenTitle').innerText = `🔍 ${jenis?.nama} - ${jamaah?.nama_lengkap}`; 
-        document.getElementById('previewDokumenImage').src = data; 
-        document.getElementById('previewDokumenModal').classList.add('show'); 
-    } 
+function previewDokumen(jamaahId, jenisId) {
+    const data = dokumenData[jamaahId]?.[jenisId];
+    if(!data) return;
+    const jamaah = jamaahList.find(j => j.id == jamaahId);
+    const jenis = dokumenJenisList.find(j => j.id === jenisId);
+
+    document.getElementById('previewDokumenTitle').innerText = `🔍 ${jenis?.nama} - ${jamaah?.nama_lengkap}`;
+    document.getElementById('previewDokumenImage').src = data;
+
+    // Build data jamaah untuk ditampilkan di bawah gambar
+    const container = document.getElementById('previewDokumenDataContainer');
+    if(container && jamaah) {
+        // Field utama yang selalu ada
+        const mainFields = [
+            { label: 'Nama Lengkap', value: jamaah.nama_lengkap },
+            { label: 'No. Porsi', value: jamaah.no_porsi },
+            { label: 'NIK', value: jamaah.nik },
+            { label: 'No. Paspor', value: jamaah.no_paspor },
+            { label: 'Tgl Lahir', value: jamaah.tgl_lahir },
+            { label: 'Nama Paspor', value: jamaah.nama_paspor },
+            { label: 'Alamat', value: jamaah.alamat },
+        ].filter(f => f.value);
+
+        // Field dinamis yang sudah diisi
+        const dynFields = (dynamicFieldsJamaah || [])
+            .filter(f => jamaah.additional_fields?.[f.name])
+            .map(f => ({ label: f.label, value: jamaah.additional_fields[f.name] }));
+
+        const allFields = [...mainFields, ...dynFields];
+
+        if(allFields.length === 0) {
+            container.innerHTML = '';
+            return;
+        }
+
+        // Buat semua data untuk "Copy Semua"
+        const allText = allFields.map(f => `${f.label}: ${f.value}`).join('\n');
+
+        let html = `
+        <div style="margin-top:14px;border-top:1.5px solid #e2e8f0;padding-top:14px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                <div style="font-weight:bold;font-size:14px;color:#0D5C4A;">📋 Data Jamaah</div>
+                <button onclick="copyTeks('${encodeURIComponent(allText)}', 'Semua data disalin!')"
+                    style="background:#0D5C4A;color:white;border:none;border-radius:20px;padding:6px 14px;font-size:12px;cursor:pointer;">
+                    📋 Copy Semua
+                </button>
+            </div>`;
+
+        allFields.forEach(f => {
+            const safeVal = f.value.replace(/'/g, "\\'");
+            html += `
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #f0f0f0;">
+                <div>
+                    <div style="font-size:11px;color:#888;">${escapeHtml(f.label)}</div>
+                    <div style="font-size:14px;color:#1a1a1a;font-weight:500;">${escapeHtml(f.value)}</div>
+                </div>
+                <button onclick="copyTeks('${encodeURIComponent(safeVal)}', '${escapeHtml(f.label)} disalin!')"
+                    style="background:#e8f5f0;color:#0D5C4A;border:none;border-radius:20px;padding:5px 12px;font-size:12px;cursor:pointer;white-space:nowrap;margin-left:8px;">
+                    📋
+                </button>
+            </div>`;
+        });
+
+        html += `</div>`;
+        container.innerHTML = html;
+    }
+
+    document.getElementById('previewDokumenModal').classList.add('show');
+}
+
+function copyTeks(encodedText, pesan) {
+    const text = decodeURIComponent(encodedText);
+    if(navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(() => showToast('✅ ' + pesan)).catch(() => {
+            fallbackCopy(text, pesan);
+        });
+    } else {
+        fallbackCopy(text, pesan);
+    }
+}
+
+function fallbackCopy(text, pesan) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;left:-9999px;top:0;';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast('✅ ' + pesan);
 }
 
 function bukaDocPenuh() {
