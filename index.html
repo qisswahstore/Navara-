@@ -2911,7 +2911,7 @@
         <div style="background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:10px;padding:12px 14px;">
             <div style="font-weight:bold;font-size:13px;color:#1d4ed8;margin-bottom:6px;">💡 Cara Copy Teks dari Dokumen</div>
             <div style="font-size:12px;color:#1e40af;line-height:1.9;">
-                1. Ketuk <strong>🔍 Buka Penuh</strong> di bawah<br>
+                1. Ketuk <strong>🌐 Buka di Chrome</strong> di bawah<br>
                 2. Tekan <strong>lama</strong> pada gambar<br>
                 3. Pilih <strong>"Telusuri dengan Google Lens"</strong><br>
                 4. Seleksi teks yang diinginkan → Salin
@@ -2919,8 +2919,9 @@
         </div>
     </div>
 
-    <div style="display:flex;gap:10px;margin-top:14px;position:sticky;bottom:0;background:white;padding:8px 0;">
+    <div style="display:flex;gap:8px;margin-top:14px;position:sticky;bottom:0;background:white;padding:8px 0;flex-wrap:wrap;">
         <button class="btn btn-primary" style="flex:1;" onclick="bukaDocPenuh()">🔍 Buka Penuh</button>
+        <button class="btn" style="flex:1;background:#1a73e8;color:white;" onclick="bukaDocDiChrome()">🌐 Buka di Chrome</button>
         <button class="btn" style="flex:1;background:#e2e8f0;color:#333;" onclick="closePreviewDokumenModal()">Tutup</button>
     </div>
 </div></div>
@@ -9470,6 +9471,24 @@ function fallbackCopy(text, pesan) {
     document.execCommand('copy');
     document.body.removeChild(ta);
     showToast('✅ ' + pesan);
+}
+
+function bukaDocDiChrome() {
+    const img = document.getElementById('previewDokumenImage');
+    if(!img?.src) return showToast('Tidak ada gambar');
+    // Buat link intent ke Chrome — langsung buka Chrome bukan WebView
+    const intentUrl = `intent:${img.src}#Intent;package=com.android.chrome;scheme=data;end`;
+    const a = document.createElement('a');
+    a.href = img.src;
+    a.target = '_blank';
+    a.rel = 'noopener';
+    // Coba buka dengan Chrome intent dulu, fallback ke tab baru
+    try {
+        window.open(img.src, '_system') || window.open(img.src, '_blank');
+    } catch(e) {
+        a.click();
+    }
+    showToast('💡 Tekan lama gambar → Telusuri dengan Google Lens');
 }
 
 function bukaDocPenuh() {
