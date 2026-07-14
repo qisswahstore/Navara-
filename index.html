@@ -5284,17 +5284,18 @@ function copyDeviceId() {
 function renderLicenseStatus() {
     const card = document.getElementById('licenseStatusCard');
     if(!card) return;
-    const info = getLicenseInfo();
-    const deviceId = getDeviceId();
-    const deviceBox = `
+    try {
+        const info = getLicenseInfo();
+        const deviceId = getDeviceId();
+        const deviceBox = `
         <div style="margin-top:14px;background:#f8fafc;border:1.5px dashed #94a3b8;border-radius:10px;padding:12px;">
             <div style="font-size:11px;color:#888;margin-bottom:4px;">📱 Device ID Anda (kirim ke Admin saat upgrade):</div>
             <div style="font-size:20px;font-weight:bold;letter-spacing:3px;color:#0D5C4A;text-align:center;cursor:pointer;" onclick="copyDeviceId()">${deviceId}</div>
             <div style="font-size:11px;color:#888;text-align:center;margin-top:4px;">Ketuk untuk menyalin</div>
         </div>`;
-    if(!info || info.expired) {
-        const sisaHitung = getRemainingTrials();
-        card.innerHTML = `
+        if(!info || info.expired) {
+            const sisaHitung = getRemainingTrials();
+            card.innerHTML = `
             <div style="font-size:40px;margin-bottom:8px;">🔓</div>
             <div style="font-size:18px;font-weight:bold;color:#ef4444;">Versi Gratis</div>
             <div style="margin:10px 0;background:#f8fafc;border-radius:10px;padding:12px;text-align:left;font-size:13px;color:#444;line-height:2;">
@@ -5302,10 +5303,10 @@ function renderLicenseStatus() {
                 🖨️ Dokumen: watermark <strong>Navara</strong><br>
                 🔒 Cuan Plan: sisa <strong>${sisaHitung}x hitung</strong>
             </div>${deviceBox}`;
-    } else {
-        const exp = info.expiryDate.toLocaleDateString('id-ID');
-        const sisaHari = Math.ceil((info.expiryDate - new Date()) / 86400000);
-        card.innerHTML = `
+        } else {
+            const exp = info.expiryDate.toLocaleDateString('id-ID');
+            const sisaHari = Math.ceil((info.expiryDate - new Date()) / 86400000);
+            card.innerHTML = `
             <div style="font-size:40px;margin-bottom:8px;">✅</div>
             <div style="font-size:18px;font-weight:bold;color:#0D5C4A;">Premium Aktif</div>
             <div style="font-size:14px;font-weight:600;color:#0D5C4A;margin:4px 0;">Paket ${info.packageName}</div>
@@ -5314,6 +5315,10 @@ function renderLicenseStatus() {
             <div style="background:#f0fdf4;border-radius:8px;padding:8px;font-size:12px;color:#166534;margin-top:10px;">
                 Jamaah Unlimited ✅ Semua Fitur ✅
             </div>${deviceBox}`;
+        }
+    } catch(e) {
+        console.error('renderLicenseStatus error:', e);
+        card.innerHTML = `<div style="padding:20px;color:#888;text-align:center;">⚠️ Gagal memuat status lisensi.<br><small>${e.message}</small></div>`;
     }
 }
 
@@ -10104,7 +10109,9 @@ function restoreFromZip(input) {
     input.value = ''; 
 }
 
-// ==================== GOOGLE DRIVE (placeholder) ====================function disconnectDrive() { showToast('🔐 Fitur Google Drive memerlukan konfigurasi'); }
+// ==================== GOOGLE DRIVE (placeholder) ====================
+function connectGoogleDrive() { showToast('🔐 Fitur Google Drive segera hadir! Pantau update Navara.'); }
+function disconnectDrive() { showToast('🔐 Fitur Google Drive memerlukan konfigurasi'); }
 function backupToDrive() { showToast('🔐 Konfigurasi Google Drive belum lengkap'); }
 function restoreFromDrive() { showToast('🔐 Konfigurasi Google Drive belum lengkap'); }
 
