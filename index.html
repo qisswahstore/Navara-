@@ -1897,14 +1897,7 @@
 <div style="width:200px; height:4px; background:rgba(255,255,255,0.2); border-radius:2px; margin:0 auto; overflow:hidden;">
 <div style="height:100%; width:100%; background:var(--accent); border-radius:2px;"></div></div>
 </div>
-<div id="splashChoice" style="display:none; width:100%; max-width:320px;">
-<button onclick="pilihLoginGoogle()" style="width:100%; padding:16px; background:white; color:#333; border:none; border-radius:16px; font-size:16px; font-weight:600; cursor:pointer; margin-bottom:14px; display:flex; align-items:center; justify-content:center; gap:10px; box-shadow:0 4px 20px rgba(0,0,0,0.15);">
-<img src="https://developers.google.com/identity/images/g-logo.png" style="width:22px; height:22px;"> Login dengan Google
-</button>
-<button onclick="pilihTanpaLogin()" style="width:100%; padding:16px; background:rgba(255,255,255,0.15); color:white; border:2px solid rgba(255,255,255,0.4); border-radius:16px; font-size:16px; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:10px; backdrop-filter:blur(10px);">
-🚀 Mulai Tanpa Login
-</button>
-</div>
+
 </div>
 
 <!-- HOME PAGE -->
@@ -2905,20 +2898,6 @@
     <h3 id="previewDokumenTitle">Preview Dokumen</h3>
     <img id="previewDokumenImage" class="preview-img" style="max-width:100%;border-radius:12px;margin:12px 0;display:block;">
     <div id="previewDokumenDataContainer"></div>
-
-    <!-- Tips Google Lens -->
-    <div style="margin-top:14px;border-top:1.5px solid #e2e8f0;padding-top:14px;">
-        <div style="background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:10px;padding:12px 14px;">
-            <div style="font-weight:bold;font-size:13px;color:#1d4ed8;margin-bottom:6px;">💡 Cara Copy Teks dari Dokumen</div>
-            <div style="font-size:12px;color:#1e40af;line-height:1.9;">
-                1. Ketuk <strong>🔍 Buka Penuh</strong> di bawah<br>
-                2. Tekan <strong>lama</strong> pada gambar<br>
-                3. Pilih <strong>"Bagikan gambar"</strong><br>
-                4. Pilih <strong>Google Lens</strong><br>
-                5. Seleksi teks → Salin ✅
-            </div>
-        </div>
-    </div>
 
     <div style="display:flex;gap:8px;margin-top:14px;position:sticky;bottom:0;background:white;padding:8px 0;">
         <button class="btn btn-primary" style="flex:1;" onclick="bukaDocPenuh()">🔍 Buka Penuh</button>
@@ -11990,21 +11969,15 @@ async function initPremium() {
     updateHeaderFromConfig();
     updateStorageInfo();
     initHistoryState();
-    
-    // CEK INSTALL POPUP - TAMBAHAN AGAR MUNCUL
+
+    // Auto masuk app tanpa pilihan — Google Drive bisa dihubungkan di Setting > Backup
     setTimeout(() => {
-        const splashLoading = document.getElementById('splashLoading');
-        const splashChoice = document.getElementById('splashChoice');
-        const sudahPilih = localStorage.getItem('navara_mode');
-        if(sudahPilih) {
-            tutupSplash();
-            // Tampilkan popup install setelah splash selesai
-            if (!isAppInstalled && !installPopupClosed && deferredPrompt) {
-                setTimeout(() => showInstallPopup(), 1000);
-            }
-        } else {
-            if(splashLoading) splashLoading.style.display = 'none';
-            if(splashChoice) splashChoice.style.display = 'block';
+        if(!localStorage.getItem('navara_mode')) {
+            localStorage.setItem('navara_mode', 'offline');
+        }
+        tutupSplash();
+        if(!isAppInstalled && !installPopupClosed && deferredPrompt) {
+            setTimeout(() => showInstallPopup(), 1000);
         }
     }, 1500);
 }
@@ -12025,52 +11998,12 @@ setTimeout(() => {
         if(navara_mode) {
             tutupSplash();
         } else {
-            // Tampilkan pilihan mode kalau belum pilih
-            const splashLoading = document.getElementById('splashLoading');
-            const splashChoice = document.getElementById('splashChoice');
-            if(splashLoading) splashLoading.style.display = 'none';
-            if(splashChoice) splashChoice.style.display = 'block';
+            // Auto masuk offline kalau belum ada mode
+            if(!localStorage.getItem('navara_mode')) localStorage.setItem('navara_mode', 'offline');
+            tutupSplash();
         }
     }
 }, 5000);
-
-function pilihLoginGoogle() {
-    localStorage.setItem('navara_mode', 'google');
-    showToast('🔐 Fitur Login Google segera hadir! Menggunakan mode offline dulu.');
-    tutupSplash();
-    // Tampilkan popup install setelah memilih
-    setTimeout(() => {
-        if (!isAppInstalled && !installPopupClosed && deferredPrompt) {
-            showInstallPopup();
-        }
-    }, 500);
-}
-
-function pilihTanpaLogin() {
-    localStorage.setItem('navara_mode', 'offline');
-    tutupSplash();
-    updateModePenyimpananUI();
-    // Tampilkan popup install setelah memilih
-    setTimeout(() => {
-        if (!isAppInstalled && !installPopupClosed && deferredPrompt) {
-            showInstallPopup();
-        }
-    }, 500);
-}
-
-function updateModePenyimpananUI() {
-    const mode = localStorage.getItem('navara_mode') || 'offline';
-    const offlineInfo = document.getElementById('modeOfflineInfo');
-    const googleInfo = document.getElementById('modeGoogleInfo');
-    if(!offlineInfo || !googleInfo) return;
-    if(mode === 'google') {
-        offlineInfo.style.display = 'none';
-        googleInfo.style.display = 'flex';
-    } else {
-        offlineInfo.style.display = 'flex';
-        googleInfo.style.display = 'none';
-    }
-}
 
 document.addEventListener('DOMContentLoaded', initPremium);
 
